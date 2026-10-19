@@ -1,0 +1,215 @@
+import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { TransitionLink } from '@/anim/TransitionLink'
+import { Badge } from '@/components/brand/Badge'
+import { Card } from '@/components/brand/Card'
+import { CheckerBand } from '@/components/brand/CheckerBand'
+import { Drip } from '@/components/brand/Drip'
+import { Lips } from '@/components/brand/Lips'
+import { Marquee } from '@/components/brand/Marquee'
+import { Photo } from '@/components/brand/Photo'
+import { Sparkle } from '@/components/brand/Sparkle'
+import { Sticker } from '@/components/brand/Sticker'
+import { MagneticButton } from '@/components/brand/MagneticButton'
+import { MenuItemCard } from '@/components/menu/MenuItemCard'
+import { MENU_ITEMS } from '@/data/menu'
+import type { FlavorKey } from '@/data/types'
+import { isOpenNow } from '@/lib/hours'
+import { formatK } from '@/lib/money'
+import { cn } from '@/lib/cn'
+import { useAvailability, useOutlets } from '@/hooks/useOutletLive'
+
+const FLAVORS: { key: FlavorKey; itemId: string; color: string }[] = [
+  { key: 'bolo', itemId: 'nachos-bolo', color: 'var(--color-checker)' },
+  { key: 'mush', itemId: 'nachos-mush', color: '#8B5E34' },
+  { key: 'cheese', itemId: 'nachos-cheese', color: 'var(--color-sun)' },
+]
+
+export default function Home() {
+  const { t } = useTranslation()
+  const [flavor, setFlavor] = useState<FlavorKey>('bolo')
+  const combos = MENU_ITEMS.filter((item) => item.kind === 'combo')
+  const outlets = useOutlets()
+  const anggrek = outlets[0]
+  const availability = useAvailability(anggrek.slug)
+
+  return (
+    <>
+      <section className="relative mx-auto flex max-w-6xl flex-col items-center px-6 pb-20 pt-14 text-center">
+        <Sparkle className="absolute left-10 top-10 h-8 w-8 text-sun" />
+        <Lips className="absolute right-12 top-16 h-7 w-12 rotate-12 text-ketchup" />
+        <h1 className="font-display text-7xl font-bold text-ketchup sm:text-8xl">KeCup</h1>
+        <p className="mt-4 max-w-2xl font-display text-2xl text-ink sm:text-4xl">
+          {t('hero.tagline')}
+        </p>
+        <p className="mt-3 max-w-xl text-lg text-ink/80">{t('hero.sub')}</p>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <MagneticButton>
+            <TransitionLink
+              to="/build"
+              className="rounded-full border-[3px] border-ink bg-ketchup px-7 py-3 font-display text-lg font-semibold text-cream shadow-sticker transition-transform hover:-translate-y-0.5"
+            >
+              {t('hero.ctaOrder')}
+            </TransitionLink>
+          </MagneticButton>
+          <MagneticButton>
+            <TransitionLink
+              to="/menu"
+              className="rounded-full border-[3px] border-ink bg-butter px-7 py-3 font-display text-lg font-semibold text-ink shadow-sticker transition-transform hover:-translate-y-0.5"
+            >
+              {t('hero.ctaMenu')}
+            </TransitionLink>
+          </MagneticButton>
+        </div>
+        <div className="mt-12 w-full max-w-md">
+          <Photo photoKey="hero-lifestyle" className="w-full rotate-1" />
+        </div>
+      </section>
+
+      <CheckerBand cell={26} rows={2} />
+
+      <div className="border-y-[3px] border-ink bg-ketchup py-3">
+        <Marquee speed={22}>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <span
+              key={index}
+              className="font-chunky text-2xl uppercase tracking-wide text-cream"
+            >
+              {t('scroll.end')} ✦
+            </span>
+          ))}
+        </Marquee>
+      </div>
+
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-center font-display text-4xl font-bold text-ink">
+          {t('flavors.title')}
+        </h2>
+        <p className="mt-2 text-center text-ink/70">{t('flavors.sub')}</p>
+
+        <div
+          className="mt-8 rounded-[2rem] border-[3px] border-ink p-8 transition-colors"
+          style={{ backgroundColor: 'var(--color-cream-deep)' }}
+        >
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            {FLAVORS.map((entry) => (
+              <button
+                key={entry.key}
+                type="button"
+                onClick={() => setFlavor(entry.key)}
+                aria-pressed={flavor === entry.key}
+                className={cn(
+                  'h-20 w-20 rounded-full border-[3px] border-ink transition-transform',
+                  flavor === entry.key ? 'scale-110 shadow-sticker' : 'hover:-translate-y-1',
+                )}
+                style={{ backgroundColor: entry.color }}
+              />
+            ))}
+          </div>
+          <p className="mt-6 text-center font-display text-2xl font-semibold text-ink">
+            {t(MENU_ITEMS.find((item) => item.id === FLAVORS.find((f) => f.key === flavor)!.itemId)!.nameKey)}
+          </p>
+          <p className="mt-2 text-center text-ink/80">
+            {t(MENU_ITEMS.find((item) => item.id === FLAVORS.find((f) => f.key === flavor)!.itemId)!.descKey)}
+          </p>
+        </div>
+      </section>
+
+      <Drip color="var(--color-butter)" />
+
+      <section className="bg-butter/40 px-6 py-16">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2">
+          <div>
+            <h2 className="font-display text-4xl font-bold text-ink">{t('scroll.end')}</h2>
+            <p className="mt-4 text-lg text-ink/80">{t('explode.cup')}</p>
+            <TransitionLink
+              to="/build"
+              className="mt-6 inline-flex rounded-full border-[3px] border-ink bg-ketchup px-6 py-2.5 font-display font-semibold text-cream shadow-sticker"
+            >
+              {t('hero.ctaOrder')}
+            </TransitionLink>
+          </div>
+          <Card className="p-6">
+            <p className="font-script text-3xl text-ketchup">one hand</p>
+            <ul className="mt-3 space-y-2 text-ink/80">
+              <li>☕ Text back</li>
+              <li>📱 Scroll the feed</li>
+              <li>🎒 Carry your bag</li>
+            </ul>
+          </Card>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="font-display text-4xl font-bold text-ink">{t('combo.title')}</h2>
+            <p className="mt-1 text-ink/70">{t('combo.save')}</p>
+          </div>
+          <Sticker tone="ketchup" rotate={-4}>
+            Save {formatK(7000)}
+          </Sticker>
+        </div>
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {combos.map((item) => (
+            <MenuItemCard key={item.id} item={item} available={availability[item.id] !== false} />
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="font-display text-4xl font-bold text-ink">Instagram wall</h2>
+        <p className="mt-1 text-ink/70">Tag @eatkecup for a spot on the wall.</p>
+        <div className="mt-6 flex flex-wrap gap-4">
+          {['ig-wall', 'ig-wall', 'ig-wall', 'ig-wall'].map((key, index) => (
+            <div
+              key={index}
+              className="w-40 rotate-[-2deg] border-[3px] border-ink bg-cream p-2 shadow-sticker even:rotate-2"
+              style={{ transform: `rotate(${index % 2 === 0 ? -2 : 2}deg)` }}
+            >
+              <Photo photoKey={key} className="border-0" />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="p-6">
+            <h2 className="font-display text-3xl font-bold text-ink">{t('outlets.title')}</h2>
+            <ul className="mt-4 space-y-2">
+              {outlets.slice(0, 3).map((outlet) => {
+                const status = isOpenNow(outlet, new Date())
+                return (
+                  <li key={outlet.slug} className="flex items-center justify-between gap-3">
+                    <span className="text-ink">{outlet.name}</span>
+                    <Badge tone={status.open ? 'lime' : 'ketchup'}>
+                      {status.open ? t('outlets.open') : t('outlets.closed')}
+                    </Badge>
+                  </li>
+                )
+              })}
+            </ul>
+            <TransitionLink
+              to="/outlets"
+              className="mt-4 inline-flex rounded-full border-[3px] border-ink bg-butter px-5 py-2 font-display font-semibold text-ink shadow-sticker"
+            >
+              {t('outlets.details')}
+            </TransitionLink>
+          </Card>
+
+          <Card className="p-6">
+            <h2 className="font-display text-3xl font-bold text-ink">{t('franchise.title')}</h2>
+            <p className="mt-2 text-ink/70">{t('franchise.sub')}</p>
+            <TransitionLink
+              to="/franchise"
+              className="mt-4 inline-flex rounded-full border-[3px] border-ink bg-ketchup px-5 py-2 font-display font-semibold text-cream shadow-sticker"
+            >
+              {t('franchise.apply')}
+            </TransitionLink>
+          </Card>
+        </div>
+      </section>
+    </>
+  )
+}

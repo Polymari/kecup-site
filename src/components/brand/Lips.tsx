@@ -1,0 +1,15 @@
+import type { SVGProps } from 'react'
+
+type LipsProps = SVGProps<SVGSVGElement> & {
+  title?: string
+}
+
+export function Lips({ title, ...props }: LipsProps) {
+  return (
+    <svg viewBox="0 0 64 40" fill="currentColor" role={title ? 'img' : 'presentation'} {...props}>
+      {title ? <title>{title}</title> : null}
+      <path d="M32 18C27.5 9.5 20 3.5 13 5.5 6.5 7.3 2.8 12.4 4 17.5c8.8-2.3 19.3-1.4 28 .5zm0 0c4.5-8.5 12-14.5 19-12.5 6.5 1.8 10.2 6.9 9 12-8.8-2.3-19.3-1.4-28 .5z" />
+      <path d="M4 17.5c1.2 2.3 3.2 4.6 5.9 6.8 4.3 3.5 10 6 13.1 7.2 4.4 1.7 9.3 1.7 13.7 0 3.1-1.2 8.8-3.7 13.1-7.2 2.7-2.2 4.7-4.5 5.9-6.8-9.1 2.9-18.5 3.9-22 3.9s-12.9-1-22-3.9z" />
+    </svg>
+  )
+}

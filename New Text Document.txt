@@ -1,0 +1,1118 @@
+Since the user is fine with Vercel too, I'm leaning toward a Vite + React SPA with Supabase as the backend, since that deploys cleanly to both GitHub Pages and Vercel without extra complexity.
+
+      For routing, I'll handle the base path differences between GitHub Pages and Vercel through an environment variable in the Vite config, using BrowserRouter with a 404.html copy trick for GitHub Pages and
+      a vercel.json rewrite for Vercel.
+
+      Now I'm working through the actual cost data to design the seed recipes and portions—figuring out per-portion costs for things like tea bags, cheese foam, condensed milk, and cream based on the
+      Indonesian pricing provided.
+
+      Cheese tea comes out to about Rp 2.600 per portion for the foam plus Rp 240 for tea, totaling Rp 4.840 HPP once packaging is added, which matches the given menu HPP. For fizzy tea, since the ingredients
+      aren't separately costed, I'm assuming a similar overall HPP of Rp 4.840 and backing into a lemon/soda base cost of roughly Rp 2.600 to match it, flagging this as an assumption since the actual
+      composition is unclear.
+
+      For mushroom sauce, I'm batching 6 portions with onion, garlic, margarine, mushroom, milk, and flour, totaling Rp 17.450 or about Rp 2.900 per portion. Bolognese works out to Rp 7.400 per portion from
+      sauce, meat, and onion across 6 portions, while cheese sauce is Rp 1.850 per portion, and I'm checking that nachos bolognese's HPP of Rp 15.900 against its Rp 25.000 price gives roughly 64% cost ratio
+      with Rp 9.100 profit.
+
+      Checking the remaining variants: nachos mushroom comes to Rp 11.400 HPP against Rp 20.000 price (57%, Rp 8.600 profit), and nachos cheese comes to Rp 10.350 HPP against Rp 17.000 (61%, Rp 6.650 profit) —
+      both checking out. For the bolognese combo package priced at Rp 35.000 with HPP Rp 20.750, I'm reconciling the numbers against nachos cost, drink cost, and packaging, finding it roughly matches once
+      accounting for the stacked cup packaging around Rp 3.500, with minor rounding differences between the tea and foam cup estimates.
+
+      Modeling the stacked cup set packaging at Rp 3.500 per combo versus standalone food tray (Rp 1.500) and standalone drink cup/lid/straw (Rp 2.000) — this supports answer A for Q3 since standalone items
+      need separate packaging. Average combo profit comes to Rp 13.950, giving payback periods of 36, 72, and 144 days for Rp 500k, 1M, and 2M investments respectively, all checking out against the flagged
+      assumptions on ingredients, packaging, bolognese total, and excluded costs like rent and equipment.
+
+      Checking their pricing push for combos: nachos bolognese at 26k claims HPP under 60%, but 15.900/26.000 actually comes to 61.2% — their claim is wrong, they'd need at least 26.500 to hit 60%. This is
+      worth flagging since it affects their pricing decisions, while the cheese combo at 18k does correctly land under 60% at 57.5%. I'm also noting the cheese tea packaging cost folds into its total HPP, and
+      now I want to think through how inventory deduction should work — whether in portions or grams — given their data structure.
+
+      Thinking through a two-level inventory model: raw ingredients get prepped into batches, then batches break down into portions, which seems like the cleanest way to match their numbers — prepared sauces
+      tracked by portion, chips and tea bags by their natural units, packaging by piece, with each stock item carrying its own cost-per-unit derived from their batch figures.
+
+      A full batch-prep feature where raw ingredients convert into stock batches would be a nice addition but is probably too much scope for a two-day build, so I'll keep the model to simple inventory items
+      with restock/purchase cost tracking and leave batch recipes as a possible stretch goal rather than a core requirement.
+
+      Instead, I can surface recipe/HPP (cost-of-goods) data through a lighter "Recipe & HPP" analytics view: stock items with editable unit costs, menu-item recipes (BOM) referencing those stock items with
+      quantities, and a live HPP calculation (sum of quantity × unit cost) feeding into revenue, gross profit, and margin reporting per item.
+
+      For prepared items, unit cost derives from a batch recipe instead of a purchase price, so I'll add prep_recipes and prep_recipe_lines tables to track raw ingredient usage, quantities, and yields for
+      computing the cost of sauces and foams.
+
+      Rather than tracking raw ingredients in full inventory, I think a cleaner approach is a "Costing" calculator in the portal where franchisees edit raw prices and recompute portion cost, then apply it to
+      the stock item. I'll treat this as a stretch task near the end since it's extra polish beyond the core demoable features.
+
+      Thinking about scope more concretely now: inventory, sales/analytics, outlet settings, and a cashier screen with recipe-based deduction are the essentials, with cost data feeding into HPP per item and
+      profit analytics. I'll fold a read-only costing breakdown into analytics itself — an HPP table, per-item margin, and a "balik modal" payback widget showing how many combo sales are needed to recoup
+      outlet investment, plus margin alerts tied to pricing strategy.
+
+      I can flag items where HPP% exceeds 60% — nachos bolo at 64%, cheese at 61% — and build a pricing insights card suggesting adjusted prices to hit the target ratio, rounding up to the nearest 500 (bolo
+      lands near 26,500, cheese near 17,500), which conveniently corrects their earlier 26k pricing mistake. For the batch-level cost data, I'll keep it as a static costing breakdown reference page, deciding
+      whether to store it in a Supabase table or just a static TS constant.
+
+      Since this data is brand-level rather than per-outlet, a static file like `src/data/costing.ts` feeding a "Recipe Costs" page in the portal makes the most sense, while editable stock unit costs still
+      live in the database. I'm now mapping out the broader schema: brand-level `menu_items` and `recipe_lines` tables, per-outlet `stock_levels` tracking quantity and thresholds, and weighing whether
+      `unit_cost` should stay brand-level or vary per outlet since purchase prices can differ.
+
+      Franchisees shouldn't be editing brand data, so I'll move `unit_cost` into `outlet_stock` instead, letting each outlet manage its own costs and compute HPP accordingly. For combos like the Craving Cup, I
+      need menu items with a `kind` field distinguishing snacks, drinks, and combos, where a combo references its snack plus a drink choice, and its recipe combines the snack's non-packaging ingredients with
+      the chosen drink's non-packaging ingredients plus a stacked cup set.
+
+      I'm tagging stock_items by category (food/drink/packaging) so combo deduction logic can pull non-packaging lines from both snack and drink, plus the combo's own stacked cup set line. For atomic sale
+      recording, I'm designing a Postgres function to insert sales and deduct stock together, weighing whether to use SECURITY INVOKER with RLS checks versus SECURITY DEFINER with explicit outlet-membership
+      verification and a locked-down search path.
+
+      I'll go with security invoker so RLS naturally enforces that only outlet members can insert sales or update stock for their outlet, and have the function compute totals server-side from menu prices
+      rather than trusting client input. For the insufficient-stock case, I'm deciding to reject the sale outright with an INSUFFICIENT_STOCK error rather than allowing negative stock, since that cleanly
+      demonstrates transactional rollback.
+
+      This also ties into something nice: the cashier UI can pre-check availability so items with insufficient stock auto-show as "out of stock," and I want that same logic reflected on the public-facing site.
+      Since anonymous users shouldn't see raw stock levels, I'll expose a security-definer function like get_public_outlet(slug) that returns outlet info plus computed availability booleans (manual sold-out
+      flag or insufficient stock), keeping the underlying numbers private.
+
+      I should also handle cashier mistakes — adding a "void last sale" action that restores stock via a void_sale function, bundled into the sales history page since errors happen during demos. For
+      restocking, I'm planning a restock function paired with a stock_movements ledger table tracking sale/restock/adjustment/void entries with quantity deltas and references.
+
+      For analytics, I'm thinking through revenue breakdowns (daily/7d/30d), ticket averages, top items, hourly/daily trends, gross profit and margins, combo vs à la carte mix, and payment method splits. Given
+      the seeded dataset is small (~1200 sales over 30 days), client-side aggregation is simpler than SQL views, though views feel more "proper" — I'll lean toward one approach.
+
+      I decide against writing complex SQL RPCs since that's error-prone for a smaller model, so I'll do client-side aggregation with pure, testable TypeScript functions for analytics. For seeding demo
+      history, I'm weighing SQL generate_series versus a Node seed script using the service role key, and lean toward the Node script since it's more reliable.
+
+      The seed script creates auth users via admin API, outlets, memberships, stock, and historical sales directly with a seeded PRNG for reproducibility, setting final stock levels rather than deducting from
+      current stock. I also note disabling public signups in the Supabase dashboard and keeping the service role key strictly server-side in `.env.local`, using the publishable/anon key for client env vars.
+
+      For migrations, running the CLI locally needs Docker, but pushing to a remote Supabase project might work without it given the DB password. Given the constraints, the simpler approach is putting SQL in a
+      migrations file and having the user paste it into the Supabase SQL Editor themselves, since I can't access their project directly — I'll mark this as a human step and consider whether to add a fallback
+      demo mode if the environment isn't configured.
+
+      I also want the public site resilient against Supabase being paused, so I'm planning static fallback data for outlets (WhatsApp numbers, hours) with a hook that returns static content immediately and
+      merges live data when available. This protects the demo if Supabase free-tier projects pause, and lets the executor build the public site first before Supabase setup is even finished.
+
+      For testing, I'm leaning toward Vitest plus React Testing Library for unit tests (pricing, WhatsApp message builder, i18n, aggregation logic), and light Playwright e2e for smoke tests — page rendering,
+      language toggle, WhatsApp URL building — while skipping portal e2e if Supabase env isn't present, since headless Chromium's WebGL support via SwiftShader should be good enough. Now I'm shifting into the
+      creative design phase, starting to sketch a brand palette pulled from the logo, like a cream background tone, to build out the "wow" visual concept.
+
+      I'm refining the exact palette — warm yellow gradients for the arch, ketchup red for text and lips, a darker checker red, a brick-maroon outline, and gold tones for a chip accent — to nail the fast-food
+      brand aesthetic.
+
+      Using maroon-brown rather than black for ink. I'm defining the warm palette tokens: cream and cream-deep backgrounds, butter and sun yellows, tangerine for outlines, and ketchup red as an accent.
+
+      For fonts, I'm leaning toward self-hosting via @fontsource to avoid external requests on GH Pages—picking "Fredoka" (variable weights 600-700, with a width axis) for headlines to match the rounded
+      "KeCup" logo feel, considering "Lilita One" or "Bagel Fat One" as chunkier alternatives for big marquee text.
+
+      For the script accent mimicking the "cravings" monoline cursive on the menu, I'm weighing "Pacifico," "Yellowtail," "Sacramento," and "Caveat Brush," and leaning toward "Sacramento" since it's thin and
+      closest to that monoline look.
+
+      For body text, I'm considering "Poppins" for menu consistency, but "Plus Jakarta Sans" has a nice narrative tie-in given its origin designed for Jakarta's branding.
+
+      For receipts and cashier elements, I'm leaning toward "Space Mono" to match the receipt motif used before sending orders via WhatsApp.
+
+      Now I'm sketching the hero section as a full 3D "Assembly" animation: checkerboard floor tiles flip in on load, a cup drops with squash-and-stretch physics, tea rises via a liquid shader, ice cubes plop
+      in, a tray clicks on top, and chips rain down using instanced tweened arcs rather than a full physics engine.
+
+      On scroll, the cup explodes into an annotated exploded-view diagram labeling the chips, sauce, tea, and cup layers, then reassembles — followed by a one-hand grab animation with rotating copy about
+      multitasking cravings. I'm also thinking through a flavor switcher with large round selector buttons.
+
+      Clicking a flavor morphs the sauce color and triggers a circular clip-path reveal transition with a drippy SVG divider animating between sections.
+
+      For the brand's playful "kecup" (kiss) theme, I want a custom lip-shaped cursor that puckers on hover and stamps fading kiss marks when clicking empty space, respecting reduced-motion and disabling on
+      touch — plus a logo-tap easter egg that triggers confetti, and a footer kiss-counter wall.
+
+      Page transitions should use a staggered red/cream checkerboard grid of divs flipping in and out from the click origin via GSAP. I also want tilted marquee ribbons with scroll-reactive speed and
+      direction, and a retro "Menu Board" page where items act as tilt-responsive sticker cards with sticker-style price tags.
+
+      For combo pricing I'm imagining a "price slash" animation — original price struck through with a drawn SVG line, new price bouncing in alongside a "Save 7k" stamp. Then for the Cup Builder flow, I'm
+      picturing a multi-step sauce/drink/quantity selector with a live 3D cup that updates colors, layers, foam, and bubble particles, an animated rolling price ticker, and a WhatsApp order action that
+      triggers a printer-style receipt sliding out.
+
+      I'm also considering cart support for multiple items (craving cup plus extras), sold-out states tied to outlet availability, and a "closed outlet" warning that still allows messaging. For the Our Story
+      page, I'm sketching a pinned horizontal-scroll timeline of fictional brand milestones along with an animated explanation of the "Kecup" name.
+
+      For the Outlets page, I'm weighing options for a Jakarta map — a hand-drawn SVG is tough to render accurately, so Leaflet with free OpenStreetMap tiles and custom lip-shaped pins seems like the more
+      realistic choice, or alternatively a stylized transit-map style diagram as a simpler fallback.
+
+      I'm leaning toward the transit-map concept now — "The Craving Line" — where each outlet becomes a colorful station with hover cards, live open/closed status dots, and a direct Google Maps link, avoiding
+      any mapping dependency while staying playful. I'm drafting a list of fictional outlet locations around Jakarta, careful to avoid naming real BINUS campuses directly.
+
+      I should just be honest about which outlets are fictional rather than overcomplicating it with config flags — a simple footer note saying something like "project for academic purposes, outlets beyond
+      BINUS Anggrek are fictional" strikes the right balance between the "big brand" presentation and lecturer honesty.
+
+      For WhatsApp and Instagram, I need clearly fake placeholder numbers that the user can swap for real ones later, keeping them in a seed file or env config. Now I'm sketching the franchise "Work With Us"
+      page — a hero with cups multiplying across a grid in a ripple effect to represent growth, plus stat counters with fictional metrics like outlet counts.
+
+      For the franchise packages, I'm designing three cup-sized tiers (Cart, Kiosk, Café) as styled cards with fictional investment ranges, and adding a client-side profit calculator with sliders for daily cup
+      volume and pricing.
+
+      I'm also planning a scroll-driven process path showing the application journey with an animated chip rolling along it, plus an FAQ accordion and a multi-step validated application form that sends
+      submissions via WhatsApp or email.
+
+      For the franchisee portal, I'm designing a calmer on-brand visual mode with cream/red tones and routes for login, dashboard, cashier, inventory, sales history, analytics, and settings — including a
+      playful login page where a 3D cup reacts to success or failure, and a cashier screen with large touch targets, photo-based menu grid, combo modals, and a cart sidebar.
+
+      I'm also planning payment flow (cash/QRIS with change calculator), charge animations with auto-deduction feedback, and low-stock warnings. For inventory, I'm sketching a stock table with thresholds and
+      status chips, restock/adjust modals, and a movement ledger, plus analytics KPI cards and charts covering revenue trends, peak sales hours, and top-selling items.
+
+      For deeper analytics I'm adding combo vs à la carte breakdowns, HPP% targets with pricing suggestions, and date range presets, using Recharts since it works well with React 19. Settings will cover outlet
+      profile info, opening hours, manual sold-out toggles, and a "temporarily closed" switch, all syncing to the public site, plus a recipe costing view within analytics.
+
+      I'm also sketching multi-tenant access control with an outlet_members table and role-based policies, then moving into the 3D cup geometry — starting with a tapered cylinder shape for the drink cup using
+      lathe or cylinder geometry.
+
+      Now I'm working out the exact dimensions for the cup and tray bowl shapes, defining radii and heights so the straw hole and wide-rim bowl match the logo reference.
+
+      Still defining measurements...
+
+      For the chips, I'm instancing 40-60 of them in a seeded random mound inside the bowl with gold toon coloring. The sauce on top gets a squashed, noise-displaced sphere for lumpy texture, plus drip shapes
+      hanging over the edges, with variant colors and bits (minced beef, mushroom slices, cheese) for each sauce type.
+
+      For the drink, I'm layering a smaller cylinder inside the cup with a custom shader gradient (amber tea tones), adding a foam cap for cloudy tea and rising bubble particles for fizzy drinks, with a wavy
+      top surface via vertex shader wobble, built using drei's shaderMaterial helper rather than onBeforeCompile.
+
+      Actually simplifying further: I'll build the drink as stacked individual cylinder meshes (each its own color layer) so it works cleanly with both toon and physical materials, animating fill by scaling a
+      group from the bottom anchor.
+
+      For slosh, instead of a wavy top mesh I'll just tilt the whole liquid group slightly with a damped spring reacting to cup movement — cheap and convincing enough. I'll add a few instanced RoundedBox ice
+      cubes with light blue transparency.
+
+      For the toon look, I'm using MeshToonMaterial with a 3-tone gradient map plus drei's Outlines component (which supports Mesh and InstancedMesh) for the inked outline effect, keeping the canvas background
+      transparent so a CSS gradient shows through behind it.
+
+      For the realistic variant, I'm weighing MeshTransmissionMaterial (great glass refraction but costly) versus a cheaper MeshPhysicalMaterial with transmission for the cup and tray, giving chips a standard
+      material with a procedural noise texture for speckles, sauce a clearcoated physical material, and considering drei's studio Environment preset for lighting even though it pulls an HDRI from a CDN.
+
+      To avoid that network dependency, I'll use Environment with procedural Lightformer children instead so nothing external needs to load, plus ContactShadows for grounding. I'm also sketching the
+      architecture for toggling between toon and realistic cup styles via a shared component that composes parts through a material factory hook, a dev-only lab route with Leva controls for side-by-side
+      comparison, and a site config that sets the default cup style globally.
+
+      For performance, I'm planning one Canvas per section with capped device pixel ratio, toggling the frameloop between demand and always depending on visibility via IntersectionObserver, using
+      PerformanceMonitor to scale quality down automatically, and lazy-loading the three.js bundle behind Suspense with an SVG poster fallback for slow connections or reduced-motion preferences.
+
+      For scroll-linked 3D, I want a GSAP ScrollTrigger timeline that drives a plain proxy object rather than React state so useFrame can read values directly without triggering re-renders every frame.
+
+      I also need to wire Lenis smooth scrolling into the GSAP ticker, but only in the public layout -- the portal with its tables should keep native scrolling. For page transitions, I'm designing a custom
+      navigation wrapper that plays a checker-pattern overlay animation in before route change and out after the new route mounts, built as a context provider with a `go(to, origin)` function, using React
+      Router v7's createBrowserRouter with layout routes.
+
+      For internationalization, I'm setting up react-i18next with separate English and Indonesian JSON dictionaries, defaulting the language based on browser locale with localStorage persistence, and adding an
+      animated EN/ID toggle in the nav. I'll also need a test ensuring both dictionaries have matching key sets, while keeping brand/menu names in English regardless of language.
+
+      For currency, I'm using Intl.NumberFormat with the 'id-ID' locale for proper rupiah formatting in the portal, while keeping the shorthand "25k" style on customer-facing menus. For time handling, I'm
+      building a helper that extracts Jakarta timezone parts via Intl.DateTimeFormat to drive open/closed logic and hourly analytics bucketing, storing timestamps consistently underneath.
+
+      For opening hours, I'm structuring a per-weekday JSON schema with open/close times and a closed flag, skipping overnight edge cases, with unit tests to verify the open-now logic.
+
+      On animation, I'm weighing GSAP (with ScrollTrigger, SplitText, DrawSVG, MorphSVG, MotionPath, Flip, CustomEase, Observer) against Motion's AnimatePresence and layout animations for UI components like
+      modals and builder steps -- worried that mixing two animation libraries could overcomplicate things for a smaller model, so I want to settle on a clear division of responsibility between them.
+
+      For the portal's UI layer, I'm debating shadcn/ui versus raw Radix primitives styled with Tailwind, leaning toward Radix for accessible components like Dialog, Switch, Tabs, Select, and Toast, though
+      shadcn's CLI generation could speed up development despite adding more files to customize for the brand.
+
+      For the rest of the stack, I'm settling on react-hook-form with zod for forms, TanStack Query v5 for Supabase data fetching with caching, zustand with localStorage persistence for cart state, and
+      lucide-react for icons plus custom SVG assets, all built on Tailwind v4.
+
+      For tooling, I'm planning Vitest with React Testing Library for unit tests (mocking R3F rather than rendering Canvas in jsdom), Playwright for e2e smoke tests, ESLint with strict TypeScript, and
+      deployment via GitHub Actions to GitHub Pages.
+
+      For Pages deploy I need the correct base path env var, repo secrets for Supabase credentials, a 404.html copy of index.html for SPA routing, and a .nojekyll file in public/. For Vercel I'd use a rewrites
+      config to route everything to index.html with a root base path, plus matching Supabase Auth redirect URL settings for each environment.
+
+      Since password login doesn't need email redirect links, Site URL configuration isn't critical here, but I should remember Supabase projects on the free tier pause from inactivity, so I'll need to wake it
+      before any demo and have a static fallback ready. Security-wise, the publishable key being public is fine since RLS policies protect the data — I need RLS enabled on every table, the service role key
+      kept local and gitignored for seeding only, sign-ups disabled, and a solid password policy. For the brand images, I should move the logo and menu photos into a proper assets folder, noting the logo's
+      cream JPEG background might blend awkwardly depending on the site's background color.
+
+      Since real menu photos can't be cleanly extracted, I'm planning placeholder components with striped/checker frames and labels, backed by a manifest file mapping asset keys to sources so photos can be
+      swapped in later without code changes. I also want a set of custom SVG illustrations — lips, sparkles, checker patterns via CSS gradients, drips, a chip, and a simplified cartoon hand — and I'm thinking
+      through how to draw these as simple paths.
+
+      Sketching lips SVG path...
+
+      Fixing the checkerboard gradient syntax, then thinking about using arch shapes as a recurring motif for frames and windows throughout the site. I'm also sketching out the homepage structure, starting
+      with a preloader animation (letters popping in, a cup filling up, then a checker-wipe reveal) followed by a pinned 3D hero section with an arch background.
+
+      After the hero, I'm planning a tilted velocity-reactive marquee, then an exploded-view scroll section showing the cup separating into labeled layers with leader-line callouts, and a flavor-switcher
+      section letting users pick sauces.
+
+      Picking a sauce should flood the background and trigger a squash "splat" on the 3D cup with a morphing drip divider between flavors. The "one hand" section pairs bold copy with a hand SVG holding the cup
+      and rolling text for what the free hand could be doing, followed by a combo-deal section with discounted sticker cards, and finally a playful draggable Instagram wall of polaroids linking to the brand
+      handle.
+
+      Now I'm mapping out the rest of the site: testimonial speech bubbles, an outlets teaser styled as a transit map, a franchise teaser with popping cup icons, and a footer with a kissing "KeCup" wordmark
+      animation and kiss counter. I'm also laying out the full route structure—home, menu, cup builder with cart and WhatsApp checkout, outlets list and detail pages, story, franchise, and a staff portal with
+      login, cashier, inventory, and sales sections.
+
+      Given the scope versus a tight timeline, I'm deciding to build the skeleton first, then flesh out details. Now I'm writing the Supabase SQL schema, starting with the outlets table including slug, name,
+      area, address, maps query, and WhatsApp fields.
+
+      Continuing the schema definition...
+
+      Adding more tables...
+
+      Adding more tables...
+
+      Adding more indexes and constraints...
+
+      For RLS efficiency on sale_items, I'll just join through sales to check outlet membership rather than duplicating outlet_id, since that's simple enough.
+
+      Now I'm defining a security-definer helper function to check outlet membership, then thinking through RLS policies: outlets should be publicly readable, but updates restricted to members with
+      column-level grants limiting what franchisees can actually change.
+
+      For outlet_members and menu data, I'm restricting to read-only for brand-level tables, and for stock changes I'm leaning toward security-definer RPC functions that enforce membership checks internally
+      rather than allowing direct column updates, since that's a more secure pattern.
+
+      For public menu availability, I want anon users to see sold-out status without exposing raw stock numbers, so I'm considering a security-definer function that computes availability per item based on
+      stock sufficiency across recipe ingredients, including combo logic for snack+drink+cup bundles -- though I'm weighing whether to push that computation into the app layer instead for simplicity.
+
+      Simpler path: expose only boolean in-stock status per ingredient via a function, and let a shared TS helper compute final availability from menu, recipes, stock booleans, and overrides, so both the
+      public site and cashier app use the same tested logic.
+
+      But a plain qty>0 check won't catch fractional usage like tea bags needing 0.75 when only 0.5 remains, so I'm shifting to computing availability directly in SQL instead.
+
+      Writing SQL function...
+
+      Actually this approach has a bug: when there's no stock row for a line, the comparison is null and bool_and silently ignores it, which could wrongly mark an item as available. I think I need a cleaner
+      design where combo recipes are made explicit rather than inferred.
+
+      Rather than dynamically composing combo recipes, maybe I compute the expanded recipe client-side given a drink choice, and keep availability logic simpler by exposing a security-definer function that
+      returns per-outlet stock quantities publicly, since exact portion counts aren't really sensitive data for this demo.
+
+      Actually, I'll simplify further: return a boolean per stock item, computed by checking if quantity on hand meets or exceeds the largest single-unit requirement across all recipes using that
+      ingredient—this guarantees at least one item is makeable. Writing SQL function...
+
+      Missing stock rows will just map to "false" on the TypeScript side, which is fine for treating untracked items as unavailable. Now I'm moving on to the record_sale RPC, defining it as a security-definer
+      plpgsql function taking outlet id, payment method, cash received, and other sale parameters as input.
+
+      I'm working through the logic: first checking staff membership and raising an authorization error if missing, then validating the payment method, and then building up the stock requirements by expanding
+      each line item's recipe — handling snacks, drinks, and combos differently, with combos needing their own cup recipe plus the component snack and drink recipes excluding packaging items, and validating
+      that the drink reference actually points to a drink. After aggregating total requirements per stock item, I need to lock the relevant outlet_stock rows before deducting.
+
+      Now I'm locking those stock rows for update, checking if quantities are sufficient and raising an insufficient-stock error (which rolls back the whole transaction) if not, then checking for sold-out
+      overrides, computing prices and cost of goods sold server-side from the menu and stock data, and finally inserting the sale, sale items, stock updates, and movement records before returning the sale id,
+      total, and any low-stock warnings as JSON. I want to write out the full PL/pgSQL function carefully since this is complex enough that a smaller model could easily get it wrong.
+
+      Writing the sale recording function...
+
+      Still writing stored procedure logic...
+
+      Since each RPC call runs as its own transaction, I'm reconsidering whether to avoid temp tables entirely and instead handle everything with CTEs and jsonb aggregation in a single SQL statement,
+      normalizing the input items via jsonb_to_recordset.
+
+      Writing requirement expansion query...
+
+      This looks solid. Now I should add validation logic to loop through the input and verify each menu item exists.
+
+      Since I need to reuse this requirements calculation across multiple queries and CTEs only work within a single statement, I'm thinking I should extract this into a reusable SQL function instead, letting
+      me call it as a table-returning helper wherever needed.
+
+      Writing the locking and stock update logic...
+
+      I'm also noting that expand_requirements should group by stock_item_id to aggregate duplicates, and thinking through the security context—since it's a SQL function reading public tables, invoker vs
+      definer semantics matter when called from within the security definer sale function.
+
+      Now I'm planning out COGS calculation (sum of quantity times unit cost), the combo pricing logic where price stays fixed regardless of drink choice, and the void_sale function that checks outlet
+      membership, prevents double-voiding, reverses stock movements, and excludes voided sales from analytics. I'm starting to sketch the restock function signature with outlet, stock item, quantity, optional
+      unit cost, and a note parameter.
+
+      For restock, I'm deciding to use weighted average cost when updating unit cost if there's existing stock, falling back to the new cost otherwise. Then I'm working out adjust_stock, which handles both
+      manual counts and waste logging — settling on a delta-based signature where waste must always be negative, while considering whether to add a separate counting mode.
+
+      For permissions, I'm planning column-level grants so members can only update low_threshold and unit_cost on outlet_stock, revoking broader insert/update/delete access and relying on RLS for row-level
+      control, while noting I should check whether newer Supabase projects still auto-grant access on new tables.
+
+      For seeding, I'm designing a TypeScript seed script that runs with the service role key to bypass RLS, and I want a single source of truth file for brand data (menu items, stock items, recipes, outlets)
+      that's shared between the front-end and the seed script rather than duplicating it in raw SQL.
+
+      For the seed steps themselves, I'm sketching idempotent auth user creation, outlet and member upserts with initial stock, and generating 30 days of synthetic historical sales data with realistic
+      time-of-day peaks around lunch and dinner, with the flagship outlet seeing heavier volume.
+
+      I'll use a deterministic seeded PRNG so results are reproducible, mix in weekday patterns and combo/payment splits, and compute COGS using the same TypeScript function the app uses for consistency --
+      skipping granular stock movements for historical records but deliberately leaving a couple of items low to demo alerts. I'll also add a `--reset` flag and store demo credentials via environment variable
+      rather than hardcoding them.
+
+      For the demo email, I'll settle on something like `anggrek.franchisee@example.com` to stay within a safe, non-production domain, and add an optional "use demo account" button on the login page driven by
+      `VITE_DEMO_LOGIN_EMAIL`/`VITE_DEMO_LOGIN_PASSWORD` env vars, which is acceptable since it's an intentionally public demo account.
+
+      Now I'm mapping unit costs to stock items, pulling the rounded per-portion figures from their HPP table (chips, bolognese sauce, mushroom sauce, cheese sauce, tea bags, etc.) so the numbers line up
+      exactly with what they already calculated rather than using stricter division.
+
+      I'm filling in the remaining items — cheese foam, fizzy base (assumed equal to cheese foam to match their Fizzy Tea HPP), and packaging units like the food tray, drink cup, and the stacked KeCup set
+      (assumed as the sum of tray and cup costs since that matches their combo HPP). I'm leaving ice out of the costing since it's not itemized.
+
+      Then I verify each recipe against their published HPP: nachos variants, both teas (tea bag + foam/base + cup), and the combo cups match closely, with small rounding differences of about 10 units in a
+      couple of the stacked combo totals.
+
+      Now I'm drafting the menu listing — names, prices, and descriptions for each nachos item, both teas, and the craving cup combos with their comparison prices.
+
+      I'm checking HPP percentages against the 60% target: Bolognese nachos still exceeds 60% even at Rp 26.000, so I need to bump it to at least Rp 26.500, while cheese nachos needs recalculation at a similar
+      threshold.
+
+      I'm also double-checking the average combo profit calculation—41.800/3 comes out to 13.933, slightly different from their stated ±13.950, but this small rounding discrepancy doesn't change the payback
+      counts of 36/72/144 units, so it's not worth flagging.
+
+      For the costing breakdown page, I'm picturing recipe cards built from the static batch data with purchase price, size, usage, and per-portion costs, plus a playful client-only "edit price" calculator so
+      users can test scenarios like "what if mushrooms cost more?" without saving changes, possibly with a button to apply updates to their outlet cost.
+
+      I'm also tracing through a few of the batch cost calculations — the cheese foam batch and tea portions — to verify the per-unit figures match what's in the data, since showing accurate HPP breakdowns
+      matters for their venture course use case.
+
+      Working through the remaining batches: mushroom batch comes to roughly 2.900/unit, bolognese around 7.400, cheese sauce 1.850, and chips flat at 7.000 with no batch detail available. I'm also noting
+      packaging cost assumptions for food versus drink items, and planning to use weighted averages as defaults for the franchise calculator's pricing and HPP logic.
+
+      For the illustrative franchise model, I'm setting up inputs like daily cup volume, operating days, combo ratio, rent, staffing, utilities, and a fictional royalty rate, then will output net profit and
+      payback period, clearly flagged as illustrative. I'm sketching three fictional franchise tiers — a small cart setup, a mid-size kiosk, and a larger café format — each with rough investment ranges, space
+      requirements, and staffing needs.
+
+      Now I'm drafting a fictional outlet list, starting with a flagship campus location with operating hours and a placeholder WhatsApp number to be replaced, then moving to a second fictional unit where I'm
+      noting that even though I'm using a real street name, the unit details and address should be clearly marked as fictional.
+
+      Settling on six outlets total: Anggrek as flagship plus Kemanggisan, Blok M, Kelapa Gading, Rawamangun, and BSD, then working out a sensible route order between them for the delivery line.
+
+      For accounts, I'm planning one franchisee email per outlet with passwords stored via env vars, plus wording for the "Make Your Own Cup" demo feature. For the i18n copy, I'm keeping the brand tagline
+      "Keep Cravings in One Cup" in English across both locales but adding an Indonesian subtitle, and leaning into a playful, pun-heavy tone for the rest of the copy.
+
+      I'm sketching sample taglines like "Snack on top. Sip below." and "One hand. All the cravings." alongside Indonesian equivalents, then drafting a WhatsApp order message template with order items, totals,
+      pickup time, and notes fields, formatted for direct sending with emojis and proper URL encoding.
+
+      I'm also planning a short random order code format (like KC-7F3A) generated client-side for reference, then laying out the Vite/React/TypeScript project structure, including GitHub workflow for
+      deployment, docs, and public brand assets, while sorting out whether to move or copy existing image files into the public/brand folder.
+
+      Now I'm mapping out the rest of the project tree: scripts for seeding and copying the 404 page, Supabase migration files for schema, RLS, and functions, and deciding setup instructions belong in a README
+      and an appendix within the plan doc rather than extra markdown files. I'm also sketching the src folder with main entry, router, global styles with Tailwind theme tokens, and a site config file holding
+      brand constants and contact details.
+
+      Continuing, I'm laying out static data modules for menu/stock/recipes/outlets/packages, costing data, and a library of utility modules covering money formatting, recipe cost expansion, WhatsApp message
+      building, business hours logic, a seeded PRNG, Supabase client setup, analytics aggregation, pricing suggestions, and franchise calculators. I'm also planning i18n files for English and Indonesian,
+      custom hooks for motion/touch detection and live outlet data, and an animation layer wrapping GSAP and Lenis smooth scroll with transition components.
+
+      Now I'm structuring the 3D model system, with a composed cup model built from individual parts like tray, straw, chips, sauce, drink, ice, and bubbles, plus toon-shaded materials, custom geometries for
+      chips and blob shapes, and dedicated scenes for the hero, builder, flavor picker, and franchise grid, all wrapped in a canvas shell that handles device pixel ratio, performance, and offscreen pausing.
+      I'm also mapping out brand components like lips, sparkles, checker patterns, arches, wordmarks, drips, stickers, and marquees, alongside layout components for the public-facing nav and footer.
+
+      I'm continuing to map out the full page structure -- home, menu, build, outlets, story, franchise, cup lab, and a staff portal with login, dashboard, cashier, inventory, sales, analytics, and settings
+      pages -- plus the supporting data hooks for auth and react-query, a zustand cart store, e2e tests, and config files for Vite, Vitest, Playwright, and Vercel. Since generating Supabase types requires CLI
+      login, I'll skip that and hand-write the types instead.
+
+      For dependency versions, since I don't know exact latest releases as of late 2026, I'm instructing the executor to install latest stable and pin exact versions, while specifying expected major versions
+      across the stack -- React 19, Vite, Tailwind 4, Three.js with React Three Fiber and Drei, GSAP, Lenis, Motion, React Router 7, i18next, Supabase client, React Query 5, Zustand 5, Zod 4, React Hook Form,
+      Recharts, and testing tools like Vitest and Playwright.
+
+      I'm also flagging a potential peer dependency conflict: React Three Fiber v9's peer range might cap React below 19.3, so I should verify compatibility between latest React and R3F before locking
+      versions.
+• WebSearch "Vite latest major version 2026 release Node requirement create-vite react-ts"
+• WebSearch "React 19.2 latest version 2026 react-three-fiber peer dependency 19.3"
+• WebSearch "Supabase publishable key sb_publishable secret key sb_secret supabase-js createClient 2026"
+
+• Thought for 1s...
+    ╰ I need to be careful here since R3F 9's peer range caps React below 19.3, and if React 19.3 is current, there could be a version conflict. R3F v10 might now be stable with a wider range, so I should
+      recommend checking the actual published version before giving install instructions.
+
+      For hosting, since the user originally asked for GitHub Pages but was open to Vercel, I'll support both — Vercel as the cleaner primary option with root-path URLs, and GitHub Pages as a secondary target
+      handled via a base-path env variable and separate workflow config.
+
+      For testing with limited time, I'm planning Vitest for pure logic, Playwright smoke tests for the public pages, and a Node integration script that exercises the backend directly — logging in as a demo
+      franchisee, recording and voiding a sale, verifying stock changes, and attempting to read another outlet's data to confirm RLS actually blocks cross-tenant access.
+
+      I also need to lay out the human-only setup steps clearly: creating the Supabase project, running the SQL, grabbing keys, disabling signups, configuring env vars, seeding data, and setting up
+      Vercel/GitHub — flagging each as a manual step the executor can't do.
+
+      Now I'm sketching out the 3D cup model's prop interface, defining flavor, drink, and style variants along with animation state typing.
+
+      Mapping out exact dimensions for the cup geometry, drink layers, and rim details with specific colors for the tea gradient...
+
+      I'm working through how to animate the fill level given the cup's taper—scaling would create a radius mismatch between the liquid and cup walls that'd be visible in the toon outline style, so I'm
+      considering regenerating the liquid geometry each frame instead since the segment count is low enough to stay cheap.
+
+      A better approach: use a clipping plane at the fill height with `localClippingEnabled` on the renderer, capping the open top with a disc matching the radius and color at that height—cheap and avoids
+      regenerating geometry. The tricky part is whether toon outlines would respect the clipping plane, so I'm leaning toward skipping outlines on the drink itself since it's hidden inside the cup anyway.
+
+      Separately layering liquid meshes and scaling each one's y-axis would poke through the cup walls due to the taper mismatch, so I'm sticking with the clipping plane plus cap disc approach. For ice, I'm
+      adding a handful of rounded cubes with a light blue tint and partial opacity, positioned randomly in the liquid and only visible once the fill level rises past their height.
+
+      Now I'm shaping the garnish tray/bowl using a lathe geometry with a curved outer wall profile, plus a central cylindrical sleeve for the straw, nesting it slightly into the cup's rim at y≈1.92.
+
+      For the chips scattered on top, I'm generating 36 rounded-triangle shapes with beveled extrusion, then bending each one's geometry slightly for realism, and distributing them in a mound using a seeded
+      random placement so the pile looks natural but reproducible.
+
+      I'm using instanced meshes with per-chip random tilts and letting some poke above the rim for authenticity, then animating them falling into place with staggered delays and bounce easing, varying their
+      color slightly per instance for a hand-made look.
+
+      For the sauce, I'm displacing an icosahedron with simplex noise to give it an organic blob shape, flattening it onto the chip mound, adding a few drip capsules animated to extend downward, and scattering
+      tiny instanced dodecahedrons across the surface to mimic bolognese bits.
+
+      I'm defining mushroom and cheese variants with their own colors and surface details, then setting up a GSAP-driven flavor swap animation where the sauce squashes down, swaps, and pops back with an
+      elastic bounce while chips wobble. Now I'm adding a translucent cylindrical straw running through the cup toward the tray.
+
+      Setting up toon gradient map for the shading, then configuring the cup's transparent toon material with outline thickness and a subtle highlight streak plane for a glossy look.
+
+      Then I'm working through drei's Outlines component props, settling on crease angle and world-unit thickness for the cartoon edge look, before setting up basic toon lighting with ambient and directional
+      lights plus an environment for reflections.
+
+      For shadows, I'm leaning on ContactShadows for both the cartoon and realistic versions, and for the realistic cup material I'm configuring MeshTransmissionMaterial with transmission, roughness, ior, and
+      chromatic aberration settings tuned for glass.
+
+      Since dual transmissive objects get expensive to render, I'm planning a performance fallback to a simpler meshPhysicalMaterial for low-end devices, and sketching out standard materials for the liquid,
+      foam, chips, and sauce with appropriate roughness and transmission values to sell each texture.
+
+      For canvas settings, I'm setting dpr limits, enabling antialiasing and alpha, and positioning the camera, but I'm catching that localClippingEnabled needs to be set on the gl instance via onCreated
+      rather than passed as a prop directly.
+
+      I need to account for tone mapping affecting toon colors — R3F defaults to ACES tone mapping, so for the toon style I should use the `flat` Canvas prop (NoToneMapping) or set `toneMapped={false}` on toon
+      materials to keep brand colors accurate, while the realistic comparison canvas keeps default ACES. I'm also planning a CanvasShell wrapper that checks for WebGL2 support and falls back to a static frame
+      for reduced-motion or low-end devices.
+
+      For performance, I'll use drei's PerformanceMonitor to drop dpr and disable multi-target materials on decline, and pause rendering with an IntersectionObserver toggling frameloop when canvases go
+      offscreen. I'm limiting the home page to at most two canvases — one shared canvas for the hero-to-exploded-view scroll sequence, and a separate one for the flavor switcher — keeping the builder on its
+      own page, and I'm now sketching the scroll timeline spec for the pinned hero section.
+
+      Before scroll even starts, I'm choreographing an autoplay intro: the cup drops in with a bounce, fills with ice popping, the tray and chips and sauce animate in with staggered easing, the headline
+      characters rise with a split-text stagger, a kiss stamp slams onto the word "Cup" with a little camera shake, then the CTA buttons fade up while the cup idles with a slow spin and bob — and I'm about to
+      define the scroll-driven phase that follows.
+
+      Now I'm mapping the scroll sequence: headline exits while the cup centers and the camera orbits, then an "explode" phase sends the tray, chips, sauce, and straw flying outward with annotation callouts
+      drawing in via leader lines, before it all collapses back and the cup spins 360° into the closing tagline. I'm also noting mobile adjustments — shorter pin length, annotations stacked below instead of
+      beside — plus skipping the intro entirely for reduced-motion users, keeping the preloader minimal, and sketching out a checkerboard overlay transition using a grid of square cells sized to the viewport.
+
+      Writing the stagger animation for the checker cells scaling in from an origin point, timing it to land around 0.65s each way with a simplified fade fallback for reduced motion, and noting portal routes
+      skip the transition entirely. I'm also planning a custom kiss-shaped cursor that only appears on fine-pointer devices, following the mouse smoothly and puckering/scaling up on hover over interactive
+      elements.
+
+      Now I'm working out the click-to-stamp lips effect, with randomized rotation and color, a pooled limit of 10 instances, and timing for the scale/fade animation. I'm weighing whether to fully hide the
+      native cursor on public pages (keeping it for text inputs) versus showing both cursors for accessibility reasons.
+
+      Compromise reached: hide the native cursor except over text inputs, where it switches to a text cursor. For the marquee, I'm setting up two rows scrolling in opposite directions using a seamless GSAP
+      loop, with the speed tied to Lenis scroll velocity so it accelerates and decays naturally, and direction flipping on scroll-up. Now moving to the wordmark design using "KeCup" styled in Fredoka.
+
+      For the ketchup-colored text with a tangerine outline, SVG text with stroke and paint-order is the more reliable choice over relying on CSS text-stroke support across browsers.
+
+      For imagery, I'll use the CSS-recreated arch for the hero rather than the logo JPEG, reserve the JPEG for footer/about/favicon since the cream background blends fine, and use SVG lips for the favicon
+      itself. I'm also building a reusable Placeholder component that renders a checkered frame with diagonal stripes, a camera icon, and a label for missing photos.
+
+      I'm realizing the menu images already contain real product shots (nachos trio, drinks, the cup) — instead of placeholders, I could use CSS object-fit and object-position to crop and display just the cup
+      region from menu2.jpeg as a genuine photo, repurposing their existing assets cleverly.
+
+      I'll skip the cropFrom utility and just use the menu images as a downloadable/print viewer lightbox on the Menu page, with the logo reused in the Story page and footer. For Story page copy, I'll lean
+      into the fictional "big brand" narrative with milestone-style placeholders since this is a class project where invented history is expected.
+
+      For the brand name, I'm playing with "Kecup" — blending the Indonesian word for a smacking kiss sound with "Cup" — to suggest "a kiss of flavor in one cup," paired with playful values like "One hand,"
+      "Crunch first," and "Share the kecup," plus placeholder team cards. On the Menu page, I'm designing a header styled like the printed menu with a script overlay reading "cravings," organized into tabbed
+      sections starting with "Craving Cups."
+
+      Since their strategy is to push combos, I'm making combos the hero section with "Best value" stickers showing computed savings, each item card featuring a placeholder photo, name, i18n description, price
+      chip, strikethrough pricing for combos, and an "Add to cup" button with hover tilt effects, peeling sticker corners, and a lips-stamp animation on add. I'm also adding a lightbox for viewing the actual
+      printed menu images and an outlet selector up top that live-updates sold-out badges based on availability. For the Builder page, I'm starting to lay out the left-side structure.
+
+      For the right side I'm building a 3D sticky stage with an arch frame and checker floor, paired with a step panel that becomes a bottom sheet on mobile. The flow walks users through choosing a sauce via
+      big circular blob buttons, picking a sip type, then deciding whether to make it a full craving cup combo — while still allowing standalone snack or drink purchases through the regular menu's add-to-cart.
+      After quantity selection, the cart drawer needs line items with qty steppers, outlet selection showing open/closed status, customer name, a pickup time picker with ASAP or 15-minute slots within business
+      hours, and a notes field.
+
+      For checkout, I want a receipt animation followed by sending the order via WhatsApp, which means opening a wa.me link with the order details. Since popup blockers can interfere if I animate before
+      opening the window, I'm deciding to use a visible "Send via WhatsApp" anchor link the user taps after seeing the receipt — more robust and accessible than trying to force a window.open call, with a
+      little "KECUP!" stamp effect on click.
+
+      I'm also designing the outlets page as a transit-map metaphor: an animated SVG line connecting outlet stations that draws in on scroll, with a tiny cup icon traveling along the path, station circles that
+      pop open into outlet cards (hours, WhatsApp, Maps link, "Order from here"), plus a plain-list fallback for accessibility, with live open/closed status computed against Jakarta time. I'm also adding small
+      UX touches to the cart like a savings message, disabled sold-out items with reasons, and persisting cart state with zustand's persist middleware.
+
+      For the outlet detail page, I'm planning a hero image, status badge, hours table with today highlighted, live availability, and quick WA/Maps actions. For the franchise page, I'm sketching a hero section
+      with a 3D grid of low-poly toon cups popping up in a rippling checkerboard pattern to visually convey "one cup becomes many," while keeping a simpler 2D fallback in mind.
+
+      I'm also thinking through a lightweight MiniCup instance (just cup, tray, blob) to keep the 35-instance grid performant, plus a stats section pulling fictional but grounded unit-economics numbers like
+      drink HPP percentage, average profit per cup, and breakeven cup count to make the franchise pitch feel credible.
+
+      For the franchise packages, I'm designing Regular/Large/Jumbo tiers shaped like cups of increasing size with a hover liquid-fill animation, each listing investment range, space/staff needs, and what's
+      included, with a "Pick this size" CTA that preselects the signup form. Then I want an illustrative profit calculator with sliders, an animated results card showing revenue/COGS/opex/profit as a bar
+      chart, payback period, and breakeven cups-per-day, all built on the real HPP table with a disclaimer, followed by a 5-step "how it works" path.
+
+      Beyond that, I'm adding a chip that travels along the scroll path, an FAQ accordion using shadcn's Radix component, and a multi-step apply form (About you / Location & budget / Message) with zod
+      validation that lets users send via WhatsApp or mailto with a prefilled message in their language, ending in a lip-confetti celebration on send. For visual design, the portal keeps the cream background
+      with neo-brutalist sticker-style cards (ink border plus offset shadow) and a checkered sidebar to stay playful but usable.
+
+      Now I'm designing the login split-screen with a 2D logo and animated lips, shake-on-error and kiss-stamp-on-success transitions, then the dashboard overview with greeting, KPIs, stock alerts, status
+      toggle, and a 7-day sparkline, followed by the tablet-friendly cashier layout with flavor-colored item tiles, combo popovers, and a cart panel.
+
+      I'm fleshing out the cart panel with quantity adjustments, payment toggles between Cash and QRIS, quick cash tender buttons, and a charge button, plus success toasts, ingredient deduction tickers,
+      stock-insufficient error handling, and auto-disabling items based on live stock queries rather than optimistic updates. Now I'm starting the inventory table structure with item, category, on-hand
+      quantity, and low-stock threshold columns.
+
+      Also sketching more charts: sales-by-hour heatmap, top items bar, category mix donut, payment split donut, and a unit economics table combining price, HPP, profit per unit, and units sold, with pricing
+      insight flags when HPP% exceeds 60%. Plus a payback widget converting capital input into cups needed, and an editable costing breakdown for what-if pricing scenarios.
+
+      Now I'm planning the Settings page: an outlet profile section with editable WhatsApp/Instagram fields and validation, an opening hours editor per day with close-after-open validation, temporary closure
+      toggle, and per-item "sold out today" switches, all saving back to outlets and overrides with a confirmation that changes go live immediately.
+
+      For authentication, I'm using Supabase's password sign-in with session persistence, an AuthProvider listening for auth state changes, and a RequireAuth wrapper that redirects to the login page, then
+      fetching the outlet membership to determine which outlet context to load after login.
+
+      I'm also mapping out React Query key structures for outlet, stock, sales, movements, and overrides data, plus public-facing queries for outlets and availability by slug, with a static fallback dataset
+      for when Supabase isn't configured. I'm considering adding Supabase Realtime so that toggling sold-out status in the portal updates the public site instantly — a nice demo effect — which would require
+      enabling replication and proper RLS policies for public read access.
+
+      Since availability relies on a function rather than a table, I'm subscribing to changes on the overrides and outlets tables instead, invalidating queries to trigger a refetch whenever those change. I'll
+      flag this realtime piece as a nice-to-have within the availability task, then move on to figuring out the analytics data fetch for sales and sale items within a given date range.
+
+      I just realized PostgREST caps results at 1000 rows by default, and with roughly 1100 sales over 30 days, the flagship outlet's query would get truncated — so I need to paginate using `.range()` in a
+      loop rather than relying on a single request. I'll provide a small helper that fetches all rows in batches of 1000, since this is an easy gotcha to miss. Now I'm thinking through timezone bucketing for
+      analytics, converting timestamps to Asia/Jakarta local dates/hours and defining "Today" as midnight Jakarta time through now.
+
+      Since WIB has no DST, I can compute Jakarta midnight in UTC simply as the local date minus a fixed 7-hour offset. For the seed data, I'm planning per-outlet daily volume patterns (flagship busier on
+      weekdays, closed Sundays, other outlets varying by weekday/weekend), hourly peak distributions by outlet type (campus vs mall), and item mix ratios for combos, snacks, and drinks along with quantity
+      distributions.
+
+      I also want a ramp-up trend plus an occasional promo-day spike to make the generated charts look realistic, all driven by a deterministic PRNG seeded from the outlet slug, with about 1% of sales marked
+      as voided and COGS computed using the standard cost functions. Then I'm working out post-seed stock levels for the flagship outlet across various ingredients, flagging ones that fall below their
+      low-stock thresholds.
+
+      I'm planning one outlet to have a zero-stock item so a menu category auto-sells-out publicly as a nice demo touch, then moving to i18n: defining key namespaces for nav, hero, sections, menu, builder,
+      outlets, story, franchise, portal, and errors, with a rule against hardcoded strings and a test enforcing key parity between English and Indonesian. Now I'm thinking through accessibility requirements
+      like semantic landmarks and focus states.
+
+      Checking color contrast, I realize ketchup red on cream background falls just under the 4.5:1 threshold for normal text, so I'll use a dark ink color for body copy and reserve ketchup for larger headings
+      where 3:1 is sufficient, then verify white text on the ketchup button background meets contrast too.
+
+      I also need to make sure the custom cursor doesn't block keyboard scrolling with Lenis, add a skip link for accessibility, and confirm the 3D canvas and hero pin degrade gracefully on mobile. For
+      testing, I'm planning unit tests with Vitest covering currency formatting, watching out for the non-breaking space Intl's Indonesian locale inserts into the rupiah output.
+
+      Still checking stock-based availability logic and combo pricing calculations for each menu item.
+
+      Then I'm planning tests for WhatsApp message formatting with phone sanitization, operating hours logic across timezone boundaries, analytics aggregation excluding voided orders, and franchise calculator
+      expected outputs.
+
+      I'm also outlining i18n key parity checks, cart store behavior, component tests with mocked 3D canvas shells, and end-to-end Playwright flows covering navigation, builder-to-WhatsApp handoff, and the
+      franchise calculator.
+
+      Then I plan a backend verification script checking RLS rules and sale recording/voiding, plus build/lint/test commands to confirm everything passes.
+
+      Now I'm drafting the task list itself, starting with Task 1: scaffolding the Vite React-TS project with Tailwind, path aliases, Vitest, Playwright, ESLint, and Prettier configured.
+
+      Task 2 is the design system with brand tokens, custom fonts, and core visual components like Lips, Sparkle, and the Wordmark, verified through a hidden styleguide page. Task 3 moves into domain logic
+      with pure, test-driven functions for menu and stock data.
+
+      For Task 4, I'm planning the app shell: full routing with stub pages, a public layout with nav/footer/language toggle, i18n parity testing between English and Indonesian, Lenis/GSAP setup for the checker
+      page transition, and deployment concerns like 404 handling and base path config. The demo would show navigating between stub pages with the transition effect and toggling language live.
+
+      Task 5 covers the static menu page with cart store and outlet selector, combo strike pricing, and a printed menu lightbox, tested against all 8 items rendering with correct prices and Indonesian
+      descriptions.
+
+      Task 6 builds the 2D builder flow with steps, pricing, cart drawer, checkout, receipt modal, and WhatsApp link generation, including closed-hours warnings, tested via RTL flow and WA URL validation with
+      an end-to-end smoke test.
+
+      Task 7 handles the outlets page with the Craving Line SVG and outlet detail pages, open-now badges, and route tests including a 404 fallback for unknown slugs.
+
+      Task 8 adds the Story and Franchise pages with packages, a calculator, and a multi-step form feeding into WhatsApp or mailto, tested for calculator logic, form validation, and mailto link construction.
+
+      Task 9 assembles the home page in 2D first — hero, marquee, flavor switcher blobs, one-hand section, combos, draggable IG wall, outlets and franchise teasers, footer — aiming for a navigable full-site
+      "skeleton complete" milestone before layering in 3D later.
+
+      Task 10 sets up the Supabase backend: schema, RLS policies, SQL functions, a human setup step, generated types, client config, seed script, and a verify-backend script that prints passing checks as the
+      demo.
+
+      Task 11 builds portal auth and shell — login, AuthProvider, RequireAuth, layout/sidebar, outlet context, and a dashboard with today's KPIs — demoed by logging in and viewing the dashboard.
+
+      Task 12 implements the cashier screen using a record_sale RPC and availability computation, tested via cart and change-calculation logic, demoed by recording a sale and watching stock decrease.
+
+      Task 13 covers inventory management: stock table, restock/adjust/waste RPCs, threshold and cost editing, and a movement ledger.
+
+      Task 14 adds sales history with list, expand, void, and CSV export.
+
+      Task 15 tackles analytics — an aggregation library built test-first, charts, unit economics, pricing insights, payback calculations, and a costing what-if tool.
+
+      Task 16 is outlet settings (hours, WhatsApp, temporary closure, sold-out overrides) plus wiring live outlet data into the public site via a useOutletLive hook feeding availability into the menu, builder,
+      and outlets pages.
+
+      Now I'm mapping out the remaining tasks: Task 17 builds the toon-style 3D cup core with geometry, materials, a KeCupModel with animation states, and a CanvasShell handling fallback/performance/pause,
+      exposed on a `/lab/cup` page. Task 18 adds a realistic variant with side-by-side comparison, FPS readout, and a style config switch. Task 19 integrates the 3D model into the Builder and Home flavor
+      switcher. Task 20 is the Home hero "Assembly" scroll story using GSAP ScrollTrigger and Lenis with a preloader. Task 21 bundles site-wide polish effects — cursor kiss stamps, easter eggs, magnetic
+      buttons, text splitting, franchise grid ripple, receipt printing, number rolls — though I'm second-guessing whether some of these should've been folded into earlier tasks rather than saved for last.
+
+      I'm deciding to split the wow layer into two tasks: Task 21 for global interaction (cursor, stamps, magnetic buttons, marquee), and Task 22 for page-specific effects like the Craving Line train,
+      franchise grid ripple, receipt stamp, menu sticker tilts, and portal login transition. Task 23 covers QA — accessibility, reduced motion, performance, cross-device, i18n, e2e tests, console cleanliness.
+      Task 24 handles deployment to Vercel and GitHub Pages with env vars and a demo-day runbook, bringing the total to 24 tasks, structured as skeleton first, then backend, then polish and wow last.
+
+      I'm reconsidering this ordering though — deploying early is better practice to catch base-path issues, so I'm moving a deploy pipeline task earlier, right after the public skeleton is built, flagged as a
+      human step that can be skipped if accounts aren't ready, with a final re-deploy at the end. I'm also noting that Supabase setup should happen early in parallel since it only takes a few minutes, and
+      considering how much effort the realistic 3D cup variant will take.
+
+      Now I'm thinking through bundle size concerns with three.js and drei, planning lazy-loading for Canvas components and separate vendor chunking, plus working out the correct font imports for the variable
+      Fredoka typeface and its width axis.
+
+      I'm setting up Lenis to mount only within the public layout, syncing it with the GSAP ticker and ScrollTrigger so smooth scrolling updates stay in sync.
+
+      Actually the lenis ref might not be ready on the first effect run, so it's safer to use the `useLenis` hook exported from lenis/react, which subscribes a callback to scroll updates directly. I should
+      also account for reduced-motion preference by skipping the smooth-scroll mount entirely in that case.
+
+      For route changes, I need to reset scroll position immediately and refresh ScrollTrigger once the new page mounts, cleaning up any triggers automatically through useGSAP's scope revert. I'm setting up
+      the central GSAP registration file that imports and registers all the plugins I'll need—ScrollTrigger, SplitText, DrawSVG, MorphSVG, MotionPath, Draggable, InertiaPlugin, Flip, and CustomEase.
+
+      For the router setup, I'm confirming React Router v7's import structure: RouterProvider now comes from 'react-router/dom' while createBrowserRouter comes from the main 'react-router' package, reflecting
+      the merge of react-router-dom into core. Now I'm working out how a TransitionLink component would intercept clicks to trigger animated page transitions before navigation completes.
+
+      I'm setting up the Supabase client initialization, checking environment variables to determine if Supabase is properly configured and creating the client with session persistence and auto-refresh
+      enabled, then defining an RPC call for recording sales.
+
+      For the error handling, I'm parsing the error message format to detect insufficient stock conditions, and confirming that PostgREST returns numeric columns as JSON numbers rather than strings, though
+      I'll still coerce with `Number()` defensively. For the seed script, I need `tsx` as a dev dependency to run TypeScript directly in Node.
+
+      I'm noting that the data and recipe modules it imports must avoid browser-only APIs or Vite's `import.meta.env`, and since path aliases might not resolve reliably in tsx, I'll stick to relative imports
+      within those pure modules. For environment variables during seeding, I'll use a `.env.local` file with the Supabase URL, secret key, and demo password, loaded via Node's `--env-file` flag combined with
+      tsx.
+
+      Writing the seed and verify npm scripts...
+
+      The verify script signs in with the publishable key and demo credentials to check client-side auth, leaving the secret key unused there. For GitHub Pages, I need to make the base path configurable via
+      VITE_BASE in the workflow rather than hardcoding the repo name.
+
+      Router basename needs to strip trailing slashes from BASE_URL, and all asset paths must use that env variable instead of hardcoded absolute paths, since those break on GH Pages subpaths. I also need to
+      copy index.html to 404.html after build so the SPA router handles client-side routes correctly on refresh.
+
+      For deployment on Vercel, I'll add rewrites in vercel.json pointing everything back to index.html, letting Vite's framework preset handle the rest. For i18n I'm planning react-i18next with bundled
+      resources, detecting language from localStorage first then falling back to browser locale (checking for 'id' prefix), setting the html lang attribute, and building an animated toggle pill between English
+      and Indonesian -- keeping brand/menu item names untranslated while translating descriptions and categories.
+
+      I also want to draft a compact bilingual copy deck covering the hero, builder, outlets, franchise, story, footer, and portal sections so the content feels polished rather than generic, starting with the
+      tagline, hero subtext, and CTA phrasing in both languages.
+
+      Also drafting the scroll end line "Snack on top. Sip below. One hand." with its Indonesian equivalent, plus starting the flavor section with "Pick your craving" and the Bolognese description emphasizing
+      meaty, saucy extras.
+
+      For combos I'm bundling cups together with "the full kecup" wordplay, highlighting savings of up to 7k versus ordering separately. And I'm drafting an IG wall hook inviting people caught kissing a cup to
+      tag the account.
+
+      I'm covering more copy pieces now: outlet teaser riding the "Craving Line," a franchise teaser about owning a KeCup, a footer line sealing the brand with a kiss, a playful 404 message about an empty cup
+      needing a refill, and builder flow steps for picking sauces and sips.
+
+      I'm continuing the builder steps (sip selection, quantity, cart, order review, WhatsApp send, savings messaging) plus a closed-outlet notice, then moving into franchise hero copy about neighborhoods
+      deserving a KeCup and the package naming scheme.
+
+      I'm also putting together a shot list for the asset manifest — hero lifestyle shots, combo and snack photos, drink shots, booth and team photos, IG wall images, outlet photos — with recommended aspect
+      ratios, while fixing the "Frizzy" typo to consistently read "Fizzy Tea" and flagging a pricing correction on the Bolognese Nachos price point.
+
+      Checking the HPP math, the claimed sub-60% ratio is actually off since 15,900/26,000 comes to 61.2%, so I'd need to bump the price to Rp 26,500 or 27,000 to hit the target, while Cheese at 18,000 is fine
+      at 57.5%; I'll note the small combo rounding discrepancy too and flag that Fizzy Tea's cost was assumed equal to Cloudy's since none was provided, so they should supply the real number later. I also want
+      to raise a security point about the portal being network-exposed — authentication runs through Supabase with RLS as the real access control, the publishable key is meant to be public, but the secret key
+      must never end up in VITE_ env vars or get committed, and sign-ups should stay disabled for the demo.
+
+      I should flag that the demo login button exposes a publicly visible password, letting anyone log in and tamper with the demo outlet's data — I'll suggest a reseed script or disabling the demo button in
+      production, and add this to the plan. Now I'm thinking about scope: the user wants a highly detailed plan that gets presented in chat and then passed again to switch_to_execution, so I'm weighing how
+      long to make it — aiming for something thorough but not excessive, around 9-11k words covering full SQL, key code snippets (Lenis, GSAP registration, toon gradient, chip geometry, Supabase client, RPC
+      calls), data tables, copy deck, and a detailed task list.
+
+      I'll present the full plan in chat first, including architecture and data-model diagrams plus a sale-flow sequence, then confirm before calling switch_to_execution with the complete plan. For the
+      database layer, I'm structuring four migration files: schema definitions, security/RLS policies, core functions (expand_requirements, record_sale, void_sale, restock_stock, adjust_stock,
+      get_outlet_stock_flags), and realtime publication setup.
+
+      Writing schema SQL...
+
+      Still defining schema tables...
+
+      Still defining more tables...
+
+      Adding more schema tables...
+
+      Adding more indexes... Now I'm setting up security with a helper function to check outlet membership using a security definer function that queries the auth context safely.
+
+      I'm granting execute permissions to authenticated users only, then enabling row-level security across all the tables and revoking broad default privileges to grant precise access instead.
+
+      I'm granting select access to sales data for authenticated users, then noting that service_role keeps bypassing RLS separately. Now I'm setting up the RLS policies themselves—allowing public read access
+      to outlets and restricting updates to outlet members only, checking membership via a security definer function.
+
+      Continuing with policies for memberships, menu items, stock items, and recipes as public-readable, then restricting stock settings updates and override edits to verified outlet members...
+
+      I'm also noting that these create policy statements need idempotency safeguards since they'll fail if rerun without existence checks.
+
+      I'm checking that Realtime with RLS correctly limits exposure — since outlets and overrides are public, anon can receive their change events, which works fine. Now I'm starting the functions file,
+      defining an `expand_requirements` function that takes a JSON array of items and returns a table of stock item IDs with quantities.
+
+      Still writing SQL logic...
+
+      Then I'm aggregating the quantities grouped by stock item, and checking whether the RETURNS TABLE column names could conflict with anything inside the SQL function body since SQL functions don't have OUT
+      parameters as variables the way PL/pgSQL does.
+
+      Since OUT parameters aren't technically arguments, qualified references should stay safe either way. Now I'm moving on to writing the record_sale function in plpgsql, starting with its outlet and payment
+      method parameters.
+
+      Writing security checks...
+
+      Still validating line items...
+
+      I also need to check for sold-out overrides at the outlet level before locking the relevant stock rows to prevent oversell during concurrent orders.
+
+      After locking, I'm computing shortfall by comparing required quantities against what's on hand, raising an insufficient stock error if any item falls short, then starting the insert into the sales table
+      with the outlet, user, payment info, and totals.
+
+      Now I'm looping through each sale line item, computing its COGS by expanding requirements and joining to stock costs, then starting the insert into sale_items...
+
+      I'm accumulating the total sale amount and total COGS as I loop through items, then adding a validation check to reject the transaction if the cash received is less than the total owed.
+
+      Now I'm updating the sale record with final totals, inserting stock movement records to log the negative deltas for each item sold, and decrementing the outlet's on-hand quantities to reflect the sale.
+
+      Finally I'm building the response payload that gathers low-stock alerts, computes change due, and sets up permissions so only authenticated users can execute this sale-recording function.
+
+      I should revoke default execute privileges from public and anon explicitly, then grant only to authenticated for these functions. Now I'm starting the void_sale function definition...
+
+      Writing void_sale logic...
+
+      Finishing the void function by stamping the voided timestamp, voiding user, and reason, then I'm moving to the restock function that validates outlet membership before adjusting stock levels with an
+      optional unit cost and note.
+
+      Still writing restock function...
+
+      Now I'm reviewing the adjust_stock function definition, checking that it also uses security definer with an empty search_path and validates the authenticated user before mutating stock rows.
+
+      Still writing stock movement function...
+
+      I'm defining a function that checks per-outlet stock availability by comparing quantity on hand against the max recipe line requirement for each item, exposed via slug lookup with locked-down execute
+      permissions for anon and authenticated roles. Now noting that combo items need special handling for their in-stock chips since they depend on multiple component items.
+
+      Adding the realtime publication migration for outlet menu overrides and outlets tables, and sketching out the TypeScript domain types for menu kinds, flavors, drink keys, and the core menu item
+      interface.
+
+      Still defining more types...
+
+      I'm sketching out the recipes module functions that expand order lines into stock requirements, compute cost of goods sold, and check availability against current stock levels.
+
+      I also need a cashier-facing fulfilment check against exact on-hand quantities, and I'm setting up test logic to verify TS and SQL agree on COGS calculations. Then I'm moving into analytics.ts, defining
+      the shape of sale records with their items, payment method, totals, and voided status.
+
+      From there I'm sketching the core reporting functions: summarizing sales into revenue/cogs/profit/avg ticket metrics, breaking results down by day (filling in zero-activity days), building an
+      hour-by-weekday matrix, finding top items, computing revenue mix across combos/snacks/drinks, payment method breakdowns, and unit economics per menu item including price, cost percentage, and
+      profitability with suggestions. I'm also adding Jakarta timezone helper functions to support these date-based aggregations.
+
+      Now I'm designing outlet hours logic to determine open/closed status with reasons, pickup slot generation in 15-minute increments respecting opening and closing times, and WhatsApp utilities for
+      sanitizing phone numbers and building order confirmation messages.
+
+      I'm also planning franchise message builders, mailto links, a short order code generator using crypto randomness, and a franchise calculator that takes daily cup volume, combo mix, pricing, and fixed
+      costs to compute revenue, COGS, gross profit, royalty, and marketing spend.
+
+      I'm working out defaults for combo and à la carte pricing/COGS averages from the data, and defining net profit and payback period logic, then figuring out the break-even cups-per-day formula based on
+      fixed costs divided by margin per unit.
+
+      I'm sketching fictional package tiers (regular, large, jumbo) with investment ranges, space, staff, rent, utilities, and default daily cup volumes, plus royalty and marketing percentages, then
+      sanity-checking the regular tier's numbers against its cost structure.
+
+      Running through monthly estimates for the regular package: combo and à la carte splits, COGS, gross margin, then subtracting royalty, marketing, and fixed opex to land on a rough net monthly profit and
+      payback period of around 1.9 months on the midpoint investment.
+
+      That seems too optimistic since it assumes 60 cups/day for a cart, so I'm lowering the default to 40 cups/day as a more realistic baseline, which drops revenue and net profit substantially and stretches
+      payback to roughly 3.8 months — I'll set default daily cup volumes at 40/90/200 for regular/large/jumbo as illustrative figures. Then I run the same math for a kiosk at 90 cups/day, landing on a net
+      monthly profit around 12M and calculating payback against the kiosk's higher investment cost.
+
+      For the jumbo tier at 200 cups/day, I'm scaling up revenue, cogs, royalty/marketing fees, and opex, and the payback period lands around 9.5 months, which seems plausible overall. Now I'm drafting outlet
+      data entries for each KeCup location — BINUS Anggrek as the flagship with real operating hours, Kemanggisan as a fictional demo outlet, and continuing with Blok M — filling in names, areas, addresses,
+      WhatsApp placeholders, and schedule details for each.
+
+      I'm finishing the remaining outlets (Rawamangun, Kelapa Gading, BSD) with their hours and line order, and flagging that the placeholder WhatsApp numbers will show as invalid until replaced with real
+      ones. I'm also noting the brand HQ contact placeholder and the partnership email, confirming the .example TLD won't cause issues, and thinking through how demo accounts interact with Supabase's email
+      confirmation behavior.
+
+      Now I'm writing the rounded-triangle chip geometry function...
+
+      Still tweaking vertex displacement for the bend effect, then noting that extrude geometry needs smoothing since the top face stays flat with few subdivisions.
+
+      Now I'm setting up a toon shading gradient map, creating a small texture that defines discrete brightness steps for the cel-shaded look.
+
+      I'm also defining a factory function for the cup's animation state, establishing default values for fill, drop, chips, sauce, and other animated properties.
+
+      For the actual animation logic, I'm using gsap to tween the fill value over time and applying the trayDrop and explode states to drive the group's vertical position each frame. For clipping the liquid
+      surface, I'm setting up a horizontal plane whose constant tracks the fill height in world space so it correctly masks the liquid geometry.
+
+      Since the cup group itself moves due to bobbing, dropping, and scrolling, the plane constant needs to be recalculated every frame relative to the group's world position rather than fixed once.
+
+      I'll skip tilt for simplicity and just let bubbles and ice bob for motion instead. For the fill cap, I'm using a circle disc sized to the current radius at that height, colored to match the layer, and
+      defining the cloudy drink's color layers by height range.
+
+      Comparing the fizzy drink's simpler two-tone palette against the cloudy version, and matching both to the logo's layered pink-to-cream look — darker base, warm mid-tone, and creamy foam top — plus an
+      amber tea-like variant with light foam.
+
+      Writing cylinder geometry for each layer...
+
+      For the fizzy variant I'm adding rising bubble instances with randomized positions and soft transparency, plus a few gently bobbing ice cubes near the top. For the realistic liquid I'm using a physical
+      material with transmission and tea-tinted attenuation so light passes through convincingly inside the translucent cup.
+
+      I also want a 2D fallback poster with the logo in the arch for non-WebGL cases, and I'm wiring up GSAP with ScrollTrigger to pin the hero section and scrub a shared animation object that drives the
+      Canvas scene via useFrame, making sure the frameloop stays active while visible. I'm also planning HTML overlay annotations positioned absolutely over the canvas.
+
+      For positioning, I'll handle desktop with fixed layouts and leader lines drawn via SVG DrawSVG, falling back to a simple list on mobile. The intro timeline should autoplay once the preloader finishes and
+      the 3D scene is ready, with a 2D fallback intro if WebGL isn't supported. For the preloader itself, I'm thinking of a cream overlay with a bouncing wordmark and an SVG cup that fills as progress
+      completes, though since geometry is procedural I need to weight font loading into that progress via document.fonts.ready alongside Canvas onCreated.
+
+      I'm also considering extra delight touches: magnetic buttons that subtly follow the cursor using quickTo, sticker-style hover wiggles, and a squishy jelly wordmark in the footer on hover. For sound, a
+      "mwah" kiss effect on stamp actions could be fun but risks annoying users, so I'd gate it behind an off-by-default toggle, though without an audio asset I'd need to synthesize it via WebAudio or just
+      leave it as an optional idea for later.
+
+      For the component library, I'm weighing shadcn/ui's init command against the risk that its interactive prompts or flag syntax might not play well with a non-interactive shell. A safer, deterministic
+      alternative is building a small set of styled components directly on Radix primitives plus Sonner for toasts, covering buttons, dialogs, switches, tabs, selects, accordions, and tooltips.
+
+      For forms I'll pair react-hook-form with zod and the matching resolver, and skip date-fns in favor of custom Jakarta-specific date helpers. Since the 3D visuals can't really be unit tested, I'll focus
+      tests on pure logic like chip placement, radius calculations, and layer configs, relying on manual checks and a Playwright smoke test to confirm the canvas renders without errors.
+
+      On the executor side I need to keep commands cross-platform since it's Windows/PowerShell — using Node scripts instead of shell-specific commands, npm instead of pnpm, and checking if git is initialized
+      before doing so, while being careful not to commit without explicit permission. I also need to plan for relocating the brand images into their proper public assets folders.
+
+      Scaffolding into an existing non-empty directory is tricky since create-vite prompts interactively when the folder isn't empty, so I'm weighing whether to scaffold into a temp subfolder and move files
+      up, or create the files manually, since I'm unsure if the `--overwrite` flag is reliably supported.
+
+      Writing package.json scripts...
+
+      I'm also planning the tsconfig path aliases and matching Vite alias setup, plus sketching the ESLint flat config with TypeScript and React hooks plugins.
+
+      For dependency versions, I need to verify peer compatibility between React, three, and R3F/drei before installing, and resolve any ERESOLVE conflicts by adjusting versions rather than forcing the
+      install.
+
+      I decide to stick with R3F v9 since v10 isn't stable enough yet and most reference material targets v9 with drei 10. I also need to check that Vite, @vitejs/plugin-react, @tailwindcss/vite, and Vitest
+      versions are mutually compatible, falling back to earlier majors if needed.
+
+      Now I'm defining the design tokens for the theme, starting with the color palette.
+
+      Still defining color variables...
+
+      I'm working out status colors mapped to the brand palette, then sketching a typography scale with a big clamp-based display heading and smaller body/label sizes, before moving into recurring visual
+      motifs like the checker-pattern band.
+
+      Other decorative elements take shape too: arch-framed images with brick borders, scattered lip shapes, twinkling star sparkles, sauce drips at section edges, rotated "NEW!"/"BEST VALUE" sticker labels
+      with ink shadows, a subtle noise grain overlay for texture, and pill-shaped buttons with thick ink borders and a pressed animation state.
+
+      Now I'm thinking through layout uniqueness — broken grids, overlapping stickers, rotated text, horizontal scroll, pinned 3D elements, oversized type. I want to add an Instagram wall of draggable
+      polaroids that drop in with random rotation using inertia physics, plus a playful "kiss counter" in the footer tracking stamps via localStorage.
+
+      I'm also sketching fun easter eggs: typing "kecup" anywhere triggers a lips confetti burst using Physics2D, login success reveals the dashboard through a circular clip-path with a ketchup-stamp
+      animation, errors shake the card, and cashier successes slide in a mini receipt with animated deduction lines. Now I'm thinking about the performance budget for the homepage's initial JS payload.
+
+      Beyond that, I'm planning the QA checklist across browsers and devices, reduced motion, keyboard nav, both languages, and offline fallbacks, plus a demo-day runbook for waking Supabase and re-seeding
+      sales data so charts look fresh right before the presentation.
+
+      Now I'm drafting the actual implementation plan document, structuring it into problem statement, requirements, research findings, and the proposed solution covering architecture, tech stack, project
+      structure, and the design system.
+
+      I still need to cover testing strategy, security notes, gotchas for the executing model, human prerequisites, the full task breakdown, and an appendix with the asset shot list. This document will be very
+      long, so I need to write it efficiently but completely, remembering to end with the standard confirmation question and to include the corrected cost figures and hosting decision upfront.
+
+      For hosting, I'll decide that since it's a static SPA backed by Supabase, Vercel will be primary (cleaner URLs) with GitHub Pages also supported via workflow.
+
+      Now I'm drafting Task 1 covering project scaffolding — setting up Vite, React, TypeScript, Tailwind v4, Vitest, Playwright, and ESLint, moving brand assets, and saving the plan doc, along with guidance
+      on verifying git status before starting.
+
+      Writing gitignore and env setup...
+
+      Setting up Playwright config with a preview webServer for e2e tests, and defining the demo verification steps: dev server shows the branded cream page, and test/build/lint all pass. Then moving to Task
+      2, which covers the design system and brand primitives.
+
+      I'm reconsidering task ordering since the router isn't in Task 1 yet. I'll make Task 2 cover design tokens and primitives rendered directly in App, Task 3 handle domain data and pure logic with TDD, Task
+      4 build the app shell with router, layouts, i18n, animations, and deploy configs, and Task 5 add the menu page, cart store, and outlet imagery.
+
+      Then I'm mapping out the rest: builder and checkout flow, outlets and story pages, franchise page, home page, first deployment as a human-gated step, Supabase schema setup as another human-gated step,
+      then the portal with auth, cashier, inventory, sales history, and analytics.
+
+      Beyond that I'm planning outlet settings with realtime public data, the 3D toon and realistic cup variants with a lab comparison page, integrating 3D into the builder and home flavor switcher, the home
+      hero assembly animation with exploded scroll and preloader, then a global wow layer (cursor effects, stamps, easter eggs, magnetic elements, marquee velocity, grain, sticker tilt) followed by
+      page-specific wow effects.
+
+      Task 25 covers QA hardening across accessibility, reduced motion, performance, i18n parity, e2e tests, and cross-device checks, plus docs and a final redeploy — bringing the total to 25 tasks. I'm making
+      sure every task ends wired into navigation so nothing is orphaned, and setting a strict definition of done for each: passing builds, lint, tests, no console errors, i18n keys in both languages,
+      reduced-motion support, and updated progress docs.
+
+      I'm also laying out global executor rules to avoid common pitfalls: no interactive CLIs, pinned versions, asset paths through a helper, all strings run through i18n in both languages, pure modules kept
+      framework-free with relative imports only, and GSAP plugins registered and scoped in one central file to avoid leaks.
+
+      I'm adding more: 3D animation state should mutate plain objects rather than React state per frame, R3F Canvas only loads through a shared wrapper with lazy-loaded three.js components, and reduced-motion
+      preferences must be respected via matchMedia and hooks. For Supabase I'm noting the secret key must stay server-side, errors must always be handled, and queries over 1000 rows need pagination, plus money
+      should display as integer rupiah while costs can stay decimal, and all business logic involving time must use Jakarta UTC+7 helpers instead of raw Date methods.
+
+      Continuing the conventions list: React Router v7 imports come from 'react-router', Lenis smooth scroll only applies in the public layout, Windows requires Node scripts instead of shell utilities, commits
+      should only happen when requested, original images get moved only after verified copies exist, CanvasShell gets mocked in jsdom tests, and accessibility requires real interactive elements with focus
+      rings and aria-labels.
+
+      Now I'm turning to the seed script specification, planning out its environment variables and structure in pseudocode form.
+
+      Writing seed script logic...
+
+      Then I'll insert seed movements per stock item to initialize the ledger, apply any stock-based sold-out overrides, and print a summary table with demo credentials and computed sales/cogs totals,
+      converting Jakarta local times to UTC ISO timestamps for all records.
+
+      Now I'm planning the verify-backend.ts checks: confirming anonymous access sees outlets and stock flags but gets no sales data (RLS enforced), confirming a signed-in demo user can only see their own
+      outlet's data and not cross-tenant sales, and testing that recording a sale via RPC correctly decrements the right stock items by the expected quantities.
+
+      I also want to validate COGS calculations match computeCogs within tolerance, verify voiding a sale restores stock, confirm cross-tenant sale attempts fail with NOT_AUTHORIZED, and check that direct
+      table updates to stock quantities are blocked by permissions — then sign out and report pass/fail status with a proper exit code.
+
+      Then I'm moving on to think through the portal pages and the outlet switcher UI, noting the seed data only includes one outlet membership so I'll need to simulate multi-outlet behavior for testing that
+      component.
+
+      For the public-facing site, I'm designing a live data overlay: a hook that merges Supabase outlet data onto the static dataset when configured, another hook for computing outlet availability from flags
+      and overrides, and a realtime provider that subscribes to changes and invalidates queries, cleaning up on unmount. On the cashier side, stock needs to refetch after each sale, with cart additions checked
+      against exact quantities on hand. The portal dashboard will pull its "today" metrics from the analytics functions, and I'm planning a CSV export for sales within a date range including sale details like
+      item, pricing, payment method, and voided status, downloaded as a blob.
+
+      For analytics, I'm sketching out Recharts visuals: an area chart for daily revenue and profit, a vertical bar chart for top items, donut charts for product mix and payment methods, and a custom CSS-grid
+      heatmap, all using brand colors. I'm also working out unit economics — a payback calculator that computes cups needed from capital input, editable costing cards that recompute per-portion costs and
+      affected menu HPP, with an "apply new cost" action that updates the outlet's stock unit cost. Settings will include an hours editor with validation, a WhatsApp number input with country code prefix,
+      sold-out and temporary-closed toggles, all saved with optimistic UI and toast feedback. Now I'm moving into the copy deck and story content, plus starting an asset shot list with placeholder keys like a
+      lifestyle hero image.
+
+      Still listing asset placeholders... I'm also noting the logo usage across footer, story page, and login, plus a lips SVG favicon, Indonesian as the default detected language, and standard Tailwind
+      breakpoints. Then I'm designing the nav: a floating pill-shaped bar centered at the top with a cream background, ink border, and sticker-style shadow, containing the logo, main links, a language toggle,
+      an order CTA, and a cart button with a bouncing count bubble.
+
+      I'm sketching how the nav hides on scroll down and reappears on scroll up, with a mobile hamburger menu that reveals a full-screen checker-wipe overlay with staggered Fredoka-font links and lip
+      decorations, plus a small franchisee login link tucked into the footer. For the footer itself, I'm laying out a checker band, giant wordmark, and columns for Explore, Visit, Partner, and Social links,
+      closing with a copyright line, a playful tagline, and an honest disclaimer noting this is a university venture-creation project with illustrative franchise data.
+
+      I'm making that disclaimer configurable via a site setting so it can be toggled easily, then moving on to draft the full plan for the chat, including mermaid diagrams for the architecture, ER model, and
+      sale-recording sequence. I'm sketching the architecture diagram showing the static React/Vite frontend with its public pages, lab, and franchisee portal, connected to Supabase for auth, Postgres with
+      RLS, and RPC functions handling sales and inventory operations.
+
+      Now I'm outlining the database entity relationships...
+
+      Still mapping the schema relationships, then I'm sketching the sale-recording sequence: cashier sends items to a Supabase RPC, which checks membership, validates stock availability, expands recipes into
+      ingredient requirements, and writes the deductions to the database.
+
+      Now I'm pinning down the dependency versions needed to keep peer requirements satisfied across the React/Three.js/GSAP/Lenis/motion/i18next stack.
+
+      Still listing dependencies...
+
+      I'm wary of leva's peer dependency risk with React 19, so I'll skip it and build my own lightweight controls (buttons/sliders) for the lab instead. For performance monitoring I can rely on drei's Stats
+      or PerformanceMonitor rather than pulling in r3f-perf.
+
+      Writing Vite config...
+
+      If manualChunks isn't supported, React.lazy already splits three into its own chunk, so I can just drop manualChunks. For Vitest config, I'll use `defineConfig` from 'vitest/config' directly in the same
+      file rather than a separate vitest.config.ts.
+
+      I should note I don't need loadEnv since VITE_BASE comes from the CI environment at build time. Now I'm thinking through the task breakdown, tying each page's tasks back to the specs I laid out in
+      section 4.5, and flagging honestly that 25 tasks in 2 days is an ambitious scope.
+
+      The lab routes for cup and brand variants stay hidden from navigation but reachable by direct URL, no footer link needed. I've covered the unique layouts requirement, and for the comparison flow, once
+      the user picks a cup style it gets stored in a CUP_STYLE config defaulting to 'toon'. Now I'm drafting the i18n copy deck with roughly 40 key strings, followed by laying out the routes table mapping each
+      path to its page component and layout type—home, menu, build, outlets, outlet detail, story, franchise, and the hidden lab routes for brand and cup variants.
+
+      The portal routes follow, including login, dashboard, cashier, inventory, sales, analytics, and settings, all gated behind auth and using lazy loading to keep the public bundle light. I'm also flagging
+      two cost calculation issues to raise with the user: the Bolognese Nachos pricing needs adjustment since its current HPP percentage still exceeds target even after the cheese swap, and the Fizzy Tea item
+      lacks a cost breakdown so I'm assuming it shares the same base cost structure as the Cloudy drink, editable later in the portal.
+
+      Now I'm drafting the actual implementation plan as a markdown document with numbered sections, starting with the problem statement describing the three core pieces: the public brand site with 3D cup
+      visualization and cup builder that routes orders to WhatsApp, the franchise partner page, and the franchisee portal with real authentication for running outlet operations like cashier and inventory
+      deduction.
+
+      I'm sketching out the rest of the document structure, covering requirements, research findings on hosting and tooling gotchas, system architecture, tech stack, folder structure, design system,
+      interaction and animation patterns, individual page specs, the 3D cup implementation, domain data models, business logic, Supabase backend design, portal functionality, internationalization, deployment
+      steps, testing criteria, and security considerations.
+
+      Now I'm drafting the menu items table with pricing, categories, and flavor/photo keys for each product like nachos variants, teas, and combo cups.
+
+      I'm also sketching out the English and Indonesian descriptions for each product, pulling the exact wording from the printed menu for nachos flavors.
+
+      Now I'm adding the combo item description for Bolognese Nachos paired with tea options, then moving to build out stock items, recipes, HPP, and initial stock level tables per outlet.
+
+      I'm filling in per-outlet stock levels for chips, sauces, tea bags, and cheese foam, flagging low or out-of-stock items like sauce-bolo at Anggrek and sauce-mush out at Blok-M.
+
+      Continuing the stock table, I note fizzy-base running low at Rawamangun, and both pack-food and pack-drink across all outlets, plus pack-stack low at Anggrek. The Blok M case shows Mushroom Nachos and
+      Mushroom Craving Cup going auto-unavailable on the public site due to the stock-out, which makes for a solid demo. Now I'm starting to define the volume model, beginning with weekday base figures for
+      Binus Anggrek.
+
+      Next I'm building out hourly weight distributions by outlet type for both the Anggrek-style and mall-style locations, factoring in weekday vs weekend base volumes and open-hours filtering. I'm also
+      setting a day-level trend multiplier that ramps gradually across the time window, adds random variance, and includes a one-day promo spike for "Kecup Day". Then I move into basket composition rules,
+      defining how many line items per order and the mix of combo versus other item types.
+
+      I'm now sketching payment method splits (QRIS vs cash), cash rounding logic, and a small void rate with a fixed reason code, plus a deterministic PRNG seeded from the outlet slug and date for
+      reproducibility. After that I move into the franchise packages table and start defining the costing batches structure for raw ingredient yields like tea bags.
+
+      Writing more costing lines...
+
+      Still calculating per-portion costs...
+
+      Each line item carries a cost value and an optional flag marking it as an estimate or assumption, so what-if edits can adjust a line's cost, recompute the per-portion figure, and compare it against the
+      outlet's current unit cost.
+
+      Applying a change rounds the recomputed value to set the new unit cost, with both exact and rounded figures displayed since their table rounds to the nearest 100. For pricing insight, I'm defining a 60%
+      target HPP threshold and a suggestion rule that rounds up the needed price to the nearest 500 whenever HPP% exceeds that target, like flagging Meaty Bolognese Nachos at 63.6% and suggesting Rp 26.500 to
+      bring it down to 60%.
+
+      I recheck the math for both products against their table and it matches. I also verify the payback calculation using average combo profit across the three combos, confirming it lands on 36 months at 500k
+      capital.
+
+      Now I'm drafting the bilingual copy deck for navigation labels and home hero content, covering menu, build-a-cup, outlets, story, franchise, order, cart, and the brand tagline in both English and
+      Indonesian.
+
+      Continuing with the home section copy, I'm writing out the hero, explode-view callouts about the nachos tray and tea layers, and starting the flavors section with the first craving option.
+
+      Still writing translation strings...
+
+      Still drafting footer and builder step translations...
+
+      Still writing checkout translation strings...
+
+      Now I'm adding WhatsApp message templates and outlet page copy, covering the open/closed status indicators and the tagline for the outlets listing page in both languages.
+
+      I'm also drafting the brand story copy explaining the name's wordplay between "kecup" (a little kiss) and "cup."
+
+      Now I'm moving into the franchise page content, writing the hero title and subtext pitching local ownership of a KeCup location.
+
+      I'm drafting the package selection section and the earnings calculator title, along with a disclaimer clarifying that any cost estimates are illustrative based on KeCup's recipe costs, not an earnings
+      guarantee.
+
+      Now I'm working through the application flow steps, the apply form title and submission options, and the franchisee portal login screen with email/password fields, sign-in button, error messaging, and a
+      demo account shortcut, plus the portal navigation items for dashboard and cashier.
+
+      I'm also mapping out cashier interactions like charge amounts, payment methods, change display, and sale confirmation, inventory actions for restocking, stock counts, and waste tracking with status
+      indicators, and error messages such as insufficient stock warnings.
+
+      I'm drafting the WhatsApp order message template with order details, pricing, pickup, and notes in both Indonesian and English, swapping "kecup.site" for "KeCup website" in the English version, then
+      moving on to writing out the full plan including a task to update the PLAN.md checkbox.
+
+      For the "Craving Line" SVG, I'm designing curved path layouts for both horizontal and vertical variants, using getPointAtLength to compute station positions along the curve at runtime rather than
+      hardcoding coordinates manually.
+
+      For the Instagram wall of polaroids, I'm deciding to disable dragging on touch devices since it conflicts with scrolling, instead showing a scattered pile with tap-to-front interaction, reserving drag
+      and kiss-cursor effects for fine pointer devices only. Since SEO isn't a priority, I can skip SSR and focus on reasonable performance targets instead of chasing perfect Lighthouse scores.
+
+      I'm now ready to write the full implementation, keeping it thorough but efficient, including complete SQL and key code snippets for tricky parts like the build config, animation library setup, and
+      smooth-scroll provider.
+
+      For the Jakarta timezone helpers, I'm writing utility functions that convert dates to WIB (UTC+7, no daylight saving) by adding a fixed offset, extracting year/month/day/hour/minute/weekday components,
+      formatting a date as a 'YYYY-MM-DD' key string, and converting that key back to a UTC midnight timestamp for WIB.
+
+      Now I'm designing the CanvasShell component that wraps a Three.js canvas with fallback handling for unsupported WebGL, reduced-motion preferences, and viewport visibility detection to control the render
+      loop, while setting up camera position, DPR scaling, and enabling local clipping on the GL context.
+
+      I'm also thinking through testing concerns—confirming Playwright works fine on Windows, and considering whether GSAP and ScrollTrigger behave adequately in jsdom for component tests, likely needing to
+      mock heavy animation hooks and keep tests focused on logic rather than visuals.
+
+      For heavy components, I'll make `useReducedMotion()` return true in test mode by mocking matchMedia in the setup file, so animations skip entirely during tests. The setup file will mock matchMedia,
+      IntersectionObserver, and ResizeObserver, import jest-dom matchers, and initialize i18n with English as the default locale.
+
+      I'm estimating the plan will run 12-14k words, so I'll keep wording economical while still covering everything requested, starting with a concrete task list. Task 1 covers scaffolding the Vite + React 19
+      + TypeScript project with Tailwind v4, Vitest, Playwright, and ESLint installed, moving brand images into place, and saving this plan verbatim to docs/PLAN.md, checking first whether the directory is
+      already a git repo before initializing one.
+
+      Now I'm working out the details of index.html and package.json — setting the page title, meta tags, theme color, favicon path, and build scripts, while considering how Vite handles asset URL rewriting
+      for files served from the public directory.
+
+      So I'll use `%BASE_URL%favicon.svg` for the favicon reference. Now I'm mapping out the full file list to scaffold—config files, source entry points, styles, test setup, and public assets—then planning
+      the dependency installation step with pinned versions and peer dependency checks before building out the empty folder skeleton.
+
+      Next I need src/lib/asset.ts with tests, plus asset.test.ts and an e2e smoke spec checking the home page loads and shows "KeCup". For the demo, running dev should show a cream page with "KeCup" in red
+      Fredoka font alongside the logo, and build/test/lint/playwright all need to pass.
+
+      Then Task 2 covers the design system: tokens, fonts, global styles, and primitive components, with a styleguide rendered temporarily in App before moving to /lab/brand in Task 4. I'm planning to put the
+      tokens into globals.css under @theme, import fonts in main.tsx, and build primitives like a Button component with primary/secondary/ghost variants, sizes, and an asChild prop.
+
+      I'm continuing to flesh out the primitive component list -- Lips, Sparkle, CheckerBand, Arch, Wordmark, Placeholder, Sticker, PriceTag, Drip, GrainOverlay, Marquee, Badge, Card, and the radix-ui wrapped
+      primitives like Dialog, Tabs, Select, and form inputs. For testing, I want to verify Placeholder renders its label and aspect ratio correctly, Button renders as a link when asChild is used, and the
+      Wordmark component includes expected SVG attributes.
+
+      Next I'm planning Task 3: pure business logic data modules for brand, costing, photos, packages, plus lib utilities covering money, WIB time, hours, recipes, pricing, WhatsApp integration, franchise
+      calculations, and a seeded PRNG, all written test-first with the styleguide displaying a unit economics debug table matching the HPP spec. Then Task 4 covers the app shell -- router with stub pages,
+      PublicLayout with nav/footer/mobile menu, and a Portal layout.
+
+      Task 4 continues with i18n detection and toggling, smooth scroll via Lenis+GSAP, page transitions with a checker wipe effect, scroll reset on route change, a 404 page, and deploy config including a
+      404.html copy step for the build, verified with i18n parity tests, nav/router tests, and a build check producing dist/404.html. Then I'm sketching out later tasks -- menu page with cart store, a 2D
+      builder with checkout and WhatsApp integration, and deployment steps for Vercel/GitHub including a GitHub Actions workflow file.
+
+      For the GH Pages workflow I'm adding cross-env so build scripts work portably across PowerShell and bash, then writing the deploy workflow itself with checkout, Node setup, install, test, and build
+      steps, injecting the repo-based base path and Supabase environment variables into the build.
+
+      Writing deploy workflow YAML...
+
+      For Vercel I'm setting up a rewrites rule in vercel.json to serve index.html for all unmatched routes, noting that filesystem files still take precedence over rewrites there.
+
+      Now I'm turning to the final response structure, planning headers, code blocks, tables, and possibly a mermaid diagram to keep everything organized and consistent.

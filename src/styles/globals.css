@@ -1,0 +1,60 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-cream: #FBF4E3;
+  --color-cream-deep: #F2E6C9;
+  --color-butter: #F7D774;
+  --color-sun: #F2B705;
+  --color-ketchup: #E23B2E;
+  --color-checker: #B01E2E;
+  --color-ink: #4A1512;
+  --color-brick: #7A1F1A;
+  --color-tangerine: #E8641E;
+  --color-gold: #E0A32E;
+  --color-lime: #CBE07A;
+
+  --font-display: 'Fredoka Variable', ui-rounded, system-ui, sans-serif;
+  --font-chunky: 'Lilita One', ui-rounded, system-ui, sans-serif;
+  --font-fat: 'Bagel Fat One', ui-rounded, system-ui, sans-serif;
+  --font-script: 'Sacramento', cursive;
+  --font-body: 'Plus Jakarta Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+
+  --shadow-sticker: 4px 4px 0 var(--color-ink);
+  --shadow-sticker-lg: 7px 7px 0 var(--color-ink);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-tangerine);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-butter);
+    color: var(--color-ink);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

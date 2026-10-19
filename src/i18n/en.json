@@ -1,0 +1,376 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "total": "Total",
+    "language": "Language",
+    "required": "This field is required.",
+    "skipToContent": "Skip to content"
+  },
+  "nav": {
+    "menu": "Menu",
+    "build": "Build a Cup",
+    "outlets": "Outlets",
+    "story": "Our Story",
+    "franchise": "Franchise",
+    "order": "Order",
+    "cart": "Cart",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "portalLogin": "Franchisee login"
+  },
+  "hero": {
+    "tagline": "Keep Cravings in One Cup",
+    "sub": "Nachos on top. Tea below. One hand, zero drama.",
+    "ctaOrder": "Build your cup",
+    "ctaMenu": "See the menu"
+  },
+  "scroll": {
+    "end": "Snack on top. Sip below. One hand."
+  },
+  "explode": {
+    "tray": "A tray of crunchy nachos, loaded with sauce",
+    "tea": "Layered tea, chilled and ready to sip",
+    "cup": "One connected cup — carry it all in one hand"
+  },
+  "flavors": {
+    "title": "Pick your craving",
+    "sub": "Three sauces, one crunchy stage."
+  },
+  "combo": {
+    "title": "The full kecup",
+    "save": "Save up to Rp 7.000 vs ordering separately",
+    "bestValue": "Best value"
+  },
+  "menu": {
+    "title": "Menu",
+    "sub": "Cravings, stacked.",
+    "tabs": {
+      "combos": "Craving Cups",
+      "snacks": "Snacks",
+      "drinks": "Drinks"
+    },
+    "addToCup": "Add to cup",
+    "soldOut": "Sold out",
+    "viewPrinted": "View printed menu",
+    "selectOutlet": "Ordering from",
+    "compare": "Save",
+    "items": {
+      "nachosBolo": {
+        "name": "Meaty Bolognese Nachos",
+        "desc": "Crunchy tortilla chips with rich minced beef sauce"
+      },
+      "nachosMush": {
+        "name": "Creamy Mushroom Nachos",
+        "desc": "Crunchy tortilla chips drizzled with creamy mushroom sauce"
+      },
+      "nachosCheese": {
+        "name": "Golden Cheese Nachos",
+        "desc": "Crunchy tortilla chips with rich melted cheese"
+      },
+      "teaCloudy": {
+        "name": "Cloudy Tea",
+        "desc": "Fresh brewed tea topped with silky cheese foam"
+      },
+      "teaFizzy": {
+        "name": "Fizzy Tea",
+        "desc": "Bubbly, tangy, and ice-cold lemon tea"
+      },
+      "comboBolo": {
+        "name": "Bolognese Craving Cup",
+        "desc": "Meaty Bolognese Nachos + your choice of tea, stacked in one cup"
+      },
+      "comboMush": {
+        "name": "Mushroom Craving Cup",
+        "desc": "Creamy Mushroom Nachos + your choice of tea, stacked in one cup"
+      },
+      "comboCheese": {
+        "name": "Cheesy Craving Cup",
+        "desc": "Golden Cheese Nachos + your choice of tea, stacked in one cup"
+      }
+    }
+  },
+  "build": {
+    "title": "Build your cup",
+    "sub": "Sauce on top. Sip below. Yours in one hand.",
+    "sauce": "Choose your sauce",
+    "sip": "Choose your sip",
+    "combo": "Make it a Craving Cup?",
+    "qty": "How many?",
+    "review": "Review your order",
+    "pickup": "Pickup time",
+    "notes": "Notes",
+    "send": "Send via WhatsApp",
+    "saved": "You saved Rp {{amount}}",
+    "closedNotice": "This outlet is closed right now — you can still send your order for later.",
+    "name": "Your name",
+    "outlet": "Pickup outlet",
+    "cart": "Your cup",
+    "empty": "Your cup is empty — pick a sauce to start.",
+    "checkout": "Checkout",
+    "orderCode": "Order code",
+    "receipt": "Receipt",
+    "asap": "ASAP"
+  },
+  "outlets": {
+    "title": "Ride the Craving Line",
+    "sub": "Six stops, one craving.",
+    "open": "Open now",
+    "closed": "Closed",
+    "orderHere": "Order from here",
+    "details": "View outlet",
+    "hours": "Opening hours",
+    "today": "Today",
+    "map": "Open in Google Maps",
+    "whatsapp": "WhatsApp this outlet",
+    "line": "Craving Line"
+  },
+  "story": {
+    "title": "Our Story",
+    "nameTitle": "Why \"KeCup\"?",
+    "name": "*Kecup* is the little kiss you blow — paired with *cup*, it's a kiss of flavor in one cup.",
+    "values": "Our values",
+    "team": "The team",
+    "timeline": "Milestones"
+  },
+  "franchise": {
+    "title": "Every neighborhood deserves a KeCup",
+    "sub": "Own a KeCup cart, kiosk, or café.",
+    "calcTitle": "Estimate your earnings",
+    "disclaimer": "Illustrative only, based on KeCup's recipe costs — not an earnings guarantee.",
+    "apply": "Apply now",
+    "pickPackage": "Pick this size",
+    "packages": {
+      "title": "Franchise packages",
+      "regular": {
+        "name": "Regular",
+        "format": "Cart",
+        "space": "2–4 m²",
+        "staff": "1 person",
+        "inclusions": "Cart build-out, training, starter kit, branding"
+      },
+      "large": {
+        "name": "Large",
+        "format": "Kiosk",
+        "space": "6–12 m²",
+        "staff": "2–3 people",
+        "inclusions": "Kiosk build-out, training, starter kit, branding, menu board"
+      },
+      "jumbo": {
+        "name": "Jumbo",
+        "format": "Café",
+        "space": "20–40 m²",
+        "staff": "4–6 people",
+        "inclusions": "Full café fit-out, training, starter kit, branding, seating set"
+      }
+    },
+    "calculator": {
+      "dailyCups": "Cups per day",
+      "daysPerMonth": "Operating days per month",
+      "comboMix": "Craving Cup mix",
+      "rent": "Monthly rent",
+      "staffing": "Monthly staffing",
+      "utilities": "Monthly utilities",
+      "royalty": "Royalty",
+      "marketing": "Marketing fund",
+      "investment": "Investment",
+      "revenue": "Revenue",
+      "cogs": "Cost of goods",
+      "gross": "Gross profit",
+      "net": "Net monthly profit",
+      "payback": "Payback period",
+      "breakeven": "Break-even",
+      "months": "{{n}} months",
+      "cupsPerDay": "{{n}} cups / day"
+    },
+    "form": {
+      "title": "Apply to partner",
+      "about": "About you",
+      "location": "Location & budget",
+      "message": "Message",
+      "name": "Full name",
+      "email": "Email",
+      "city": "City / location",
+      "budget": "Budget",
+      "package": "Package",
+      "sendWhatsapp": "Send via WhatsApp",
+      "sendEmail": "Send via email",
+      "success": "Message ready — thank you!"
+    }
+  },
+  "footer": {
+    "tagline": "Sealed with a kecup.",
+    "disclaimer": "A BINUS venture-creation project. Outlets beyond BINUS Anggrek are illustrative.",
+    "explore": "Explore",
+    "visit": "Visit",
+    "partner": "Partner",
+    "social": "Social",
+    "kissCounter": "Kisses given"
+  },
+  "error": {
+    "404": "This cup's empty — let's get you a refill.",
+    "home": "Back to home"
+  },
+  "status": {
+    "open": "Open",
+    "closed": "Closed",
+    "temporarilyClosed": "Temporarily closed",
+    "inStock": "In stock",
+    "lowStock": "Low stock",
+    "outOfStock": "Out of stock"
+  },
+  "stock": {
+    "items": {
+      "chips": "Tortilla chips",
+      "sauceBolo": "Bolognese sauce",
+      "sauceMush": "Mushroom sauce",
+      "sauceCheese": "Cheese sauce",
+      "teaBag": "Tea bag",
+      "cheeseFoam": "Cheese foam",
+      "fizzyBase": "Fizzy base",
+      "packFood": "Food tray",
+      "packDrink": "Drink cup set",
+      "packStack": "Stacked KeCup set"
+    }
+  },
+  "costing": {
+    "title": "Recipe costs",
+    "perPortion": "Per portion",
+    "exact": "Exact",
+    "rounded": "Rounded",
+    "batch": "Batch",
+    "yield": "Yield",
+    "estimate": "Estimated",
+    "applyCost": "Apply as unit cost",
+    "chips": "Tortilla chips",
+    "sauceBolo": "Bolognese sauce",
+    "sauceMush": "Mushroom sauce",
+    "sauceCheese": "Cheese sauce",
+    "teaBag": "Tea bag",
+    "cheeseFoam": "Cheese foam",
+    "fizzyBase": "Fizzy base",
+    "packFood": "Food tray",
+    "packDrink": "Drink cup set",
+    "packStack": "Stacked KeCup set",
+    "lines": {
+      "tortillaChips": "Tortilla chips",
+      "sauceBase": "Tomato sauce base",
+      "mincedBeef": "Minced beef",
+      "onion": "Onion",
+      "garlic": "Garlic",
+      "margarine": "Margarine",
+      "mushroom": "Mushroom",
+      "milk": "Milk",
+      "flour": "Flour",
+      "cheeseBlock": "Cheese block",
+      "creamCheese": "Cream cheese",
+      "whippingCream": "Whipping cream",
+      "salt": "Salt",
+      "teaBag": "Tea bag",
+      "lemonSodaBase": "Lemon soda base",
+      "foodTray": "Food tray",
+      "drinkCupSet": "Drink cup + lid + straw"
+    }
+  },
+  "portal": {
+    "login": {
+      "title": "Franchisee portal",
+      "email": "Email",
+      "password": "Password",
+      "signIn": "Sign in",
+      "error": "That email and password combination didn't work.",
+      "demo": "Use demo account"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "cashier": "Cashier",
+      "inventory": "Inventory",
+      "sales": "Sales",
+      "analytics": "Analytics",
+      "settings": "Settings",
+      "logout": "Sign out"
+    },
+    "dashboard": {
+      "greeting": "Welcome back",
+      "today": "Today at a glance",
+      "revenue": "Revenue",
+      "orders": "Orders",
+      "avgTicket": "Average ticket",
+      "alerts": "Stock alerts",
+      "sparkline": "Last 7 days",
+      "status": "Outlet status"
+    },
+    "cashier": {
+      "title": "Cashier",
+      "charge": "Charge",
+      "cash": "Cash",
+      "qris": "QRIS",
+      "change": "Change",
+      "confirm": "Confirm sale",
+      "success": "Sale recorded",
+      "insufficientStock": "Not enough stock to complete this sale",
+      "cartEmpty": "Add items to start a sale",
+      "tendered": "Cash received"
+    },
+    "inventory": {
+      "title": "Inventory",
+      "item": "Item",
+      "category": "Category",
+      "onHand": "On hand",
+      "threshold": "Low threshold",
+      "unitCost": "Unit cost",
+      "status": "Status",
+      "restock": "Restock",
+      "adjust": "Adjust",
+      "waste": "Log waste",
+      "movements": "Movement ledger",
+      "note": "Note"
+    },
+    "sales": {
+      "title": "Sales history",
+      "date": "Date",
+      "payment": "Payment",
+      "total": "Total",
+      "void": "Void sale",
+      "voided": "Voided",
+      "export": "Export CSV",
+      "empty": "No sales yet"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "revenueTrend": "Revenue & profit",
+      "topItems": "Top items",
+      "mix": "Product mix",
+      "payments": "Payment split",
+      "heatmap": "Sales by hour",
+      "unitEcon": "Unit economics",
+      "price": "Price",
+      "hpp": "HPP",
+      "hppPct": "HPP %",
+      "profit": "Profit",
+      "units": "Units sold",
+      "payback": "Payback",
+      "whatIf": "Costing what-if",
+      "pricingInsight": "Pricing insights",
+      "suggest": "Suggested price"
+    },
+    "settings": {
+      "title": "Outlet settings",
+      "profile": "Outlet profile",
+      "whatsapp": "WhatsApp number",
+      "instagram": "Instagram",
+      "hours": "Opening hours",
+      "soldOut": "Sold out today",
+      "tempClosed": "Temporarily closed",
+      "saved": "Saved — live on the public site"
+    }
+  }
+}

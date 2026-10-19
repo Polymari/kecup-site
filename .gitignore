@@ -1,0 +1,12 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+.env
+.env.local
+.env.*.local
+playwright-report
+test-results
+.DS_Store
+Thumbs.db
+.commandcode/

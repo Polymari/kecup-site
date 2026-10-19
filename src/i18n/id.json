@@ -1,0 +1,376 @@
+{
+  "common": {
+    "loading": "Memuat…",
+    "close": "Tutup",
+    "back": "Kembali",
+    "next": "Lanjut",
+    "submit": "Kirim",
+    "cancel": "Batal",
+    "save": "Simpan",
+    "edit": "Ubah",
+    "add": "Tambah",
+    "remove": "Hapus",
+    "total": "Total",
+    "language": "Bahasa",
+    "required": "Bagian ini wajib diisi.",
+    "skipToContent": "Langsung ke konten"
+  },
+  "nav": {
+    "menu": "Menu",
+    "build": "Rakit Cup",
+    "outlets": "Outlet",
+    "story": "Cerita Kami",
+    "franchise": "Kemitraan",
+    "order": "Pesan",
+    "cart": "Keranjang",
+    "openMenu": "Buka menu",
+    "closeMenu": "Tutup menu",
+    "portalLogin": "Login mitra"
+  },
+  "hero": {
+    "tagline": "Keep Cravings in One Cup",
+    "sub": "Nachos di atas. Teh di bawah. Satu tangan, tanpa ribet.",
+    "ctaOrder": "Rakit cup-mu",
+    "ctaMenu": "Lihat menu"
+  },
+  "scroll": {
+    "end": "Camilan di atas. Seruput di bawah. Satu tangan."
+  },
+  "explode": {
+    "tray": "Nampan nachos renyah, penuh saus",
+    "tea": "Teh berlapis, dingin dan siap seruput",
+    "cup": "Satu cup menyatu — bawa semua dengan satu tangan"
+  },
+  "flavors": {
+    "title": "Pilih cravings-mu",
+    "sub": "Tiga saus, satu panggung renyah."
+  },
+  "combo": {
+    "title": "Paket kecup lengkap",
+    "save": "Hemat sampai Rp 7.000 dibanding beli terpisah",
+    "bestValue": "Paling hemat"
+  },
+  "menu": {
+    "title": "Menu",
+    "sub": "Cravings, bertumpuk.",
+    "tabs": {
+      "combos": "Craving Cups",
+      "snacks": "Camilan",
+      "drinks": "Minuman"
+    },
+    "addToCup": "Tambah ke cup",
+    "soldOut": "Habis",
+    "viewPrinted": "Lihat menu cetak",
+    "selectOutlet": "Pesan dari",
+    "compare": "Hemat",
+    "items": {
+      "nachosBolo": {
+        "name": "Meaty Bolognese Nachos",
+        "desc": "Keripik tortilla renyah dengan saus daging sapi cincang yang kaya"
+      },
+      "nachosMush": {
+        "name": "Creamy Mushroom Nachos",
+        "desc": "Keripik tortilla renyah dengan siraman saus jamur creamy"
+      },
+      "nachosCheese": {
+        "name": "Golden Cheese Nachos",
+        "desc": "Keripik tortilla renyah dengan keju leleh yang lezat"
+      },
+      "teaCloudy": {
+        "name": "Cloudy Tea",
+        "desc": "Teh seduh segar dengan topping kefoam lembut"
+      },
+      "teaFizzy": {
+        "name": "Fizzy Tea",
+        "desc": "Teh lemon dingin, segar, dan berbuih"
+      },
+      "comboBolo": {
+        "name": "Bolognese Craving Cup",
+        "desc": "Meaty Bolognese Nachos + pilihan teh, ditumpuk dalam satu cup"
+      },
+      "comboMush": {
+        "name": "Mushroom Craving Cup",
+        "desc": "Creamy Mushroom Nachos + pilihan teh, ditumpuk dalam satu cup"
+      },
+      "comboCheese": {
+        "name": "Cheesy Craving Cup",
+        "desc": "Golden Cheese Nachos + pilihan teh, ditumpuk dalam satu cup"
+      }
+    }
+  },
+  "build": {
+    "title": "Rakit cup-mu",
+    "sub": "Saus di atas. Seruput di bawah. Satu tangan.",
+    "sauce": "Pilih saus",
+    "sip": "Pilih minuman",
+    "combo": "Jadikan Craving Cup?",
+    "qty": "Berapa banyak?",
+    "review": "Tinjau pesanan",
+    "pickup": "Waktu ambil",
+    "notes": "Catatan",
+    "send": "Kirim via WhatsApp",
+    "saved": "Kamu hemat Rp {{amount}}",
+    "closedNotice": "Outlet ini sedang tutup — kamu tetap bisa kirim pesanan untuk nanti.",
+    "name": "Namamu",
+    "outlet": "Outlet pengambilan",
+    "cart": "Cup-mu",
+    "empty": "Cup-mu kosong — pilih saus untuk mulai.",
+    "checkout": "Checkout",
+    "orderCode": "Kode pesanan",
+    "receipt": "Struk",
+    "asap": "Secepatnya"
+  },
+  "outlets": {
+    "title": "Naik Craving Line",
+    "sub": "Enam perhentian, satu craving.",
+    "open": "Buka sekarang",
+    "closed": "Tutup",
+    "orderHere": "Pesan dari sini",
+    "details": "Lihat outlet",
+    "hours": "Jam buka",
+    "today": "Hari ini",
+    "map": "Buka di Google Maps",
+    "whatsapp": "WhatsApp outlet ini",
+    "line": "Craving Line"
+  },
+  "story": {
+    "title": "Cerita Kami",
+    "nameTitle": "Kenapa \"KeCup\"?",
+    "name": "*Kecup* itu kecupan kecil — digabung dengan *cup*, jadi sekecup rasa dalam satu cup.",
+    "values": "Nilai kami",
+    "team": "Tim",
+    "timeline": "Perjalanan"
+  },
+  "franchise": {
+    "title": "Setiap lingkungan layak punya KeCup",
+    "sub": "Miliki gerobak, kios, atau kafe KeCup.",
+    "calcTitle": "Perkirakan pendapatanmu",
+    "disclaimer": "Hanya ilustrasi, berdasarkan biaya resep KeCup — bukan jaminan pendapatan.",
+    "apply": "Daftar sekarang",
+    "pickPackage": "Pilih ukuran ini",
+    "packages": {
+      "title": "Paket kemitraan",
+      "regular": {
+        "name": "Regular",
+        "format": "Gerobak",
+        "space": "2–4 m²",
+        "staff": "1 orang",
+        "inclusions": "Gerobak, pelatihan, starter kit, branding"
+      },
+      "large": {
+        "name": "Large",
+        "format": "Kios",
+        "space": "6–12 m²",
+        "staff": "2–3 orang",
+        "inclusions": "Kios, pelatihan, starter kit, branding, papan menu"
+      },
+      "jumbo": {
+        "name": "Jumbo",
+        "format": "Kafe",
+        "space": "20–40 m²",
+        "staff": "4–6 orang",
+        "inclusions": "Fit-out kafe penuh, pelatihan, starter kit, branding, set meja kursi"
+      }
+    },
+    "calculator": {
+      "dailyCups": "Cup per hari",
+      "daysPerMonth": "Hari operasional per bulan",
+      "comboMix": "Komposisi Craving Cup",
+      "rent": "Sewa bulanan",
+      "staffing": "Gaji bulanan",
+      "utilities": "Utilitas bulanan",
+      "royalty": "Royalti",
+      "marketing": "Dana pemasaran",
+      "investment": "Investasi",
+      "revenue": "Pendapatan",
+      "cogs": "Harga pokok",
+      "gross": "Laba kotor",
+      "net": "Laba bersih bulanan",
+      "payback": "Balik modal",
+      "breakeven": "Titik impas",
+      "months": "{{n}} bulan",
+      "cupsPerDay": "{{n}} cup / hari"
+    },
+    "form": {
+      "title": "Daftar jadi mitra",
+      "about": "Tentang kamu",
+      "location": "Lokasi & anggaran",
+      "message": "Pesan",
+      "name": "Nama lengkap",
+      "email": "Email",
+      "city": "Kota / lokasi",
+      "budget": "Anggaran",
+      "package": "Paket",
+      "sendWhatsapp": "Kirim via WhatsApp",
+      "sendEmail": "Kirim via email",
+      "success": "Pesan siap dikirim — terima kasih!"
+    }
+  },
+  "footer": {
+    "tagline": "Disegel dengan kecup.",
+    "disclaimer": "Proyek venture-creation BINUS. Outlet selain BINUS Anggrek bersifat ilustrasi.",
+    "explore": "Jelajahi",
+    "visit": "Kunjungi",
+    "partner": "Mitra",
+    "social": "Sosial",
+    "kissCounter": "Kecupan diberikan"
+  },
+  "error": {
+    "404": "Cup ini kosong — ayo isi ulang.",
+    "home": "Kembali ke beranda"
+  },
+  "status": {
+    "open": "Buka",
+    "closed": "Tutup",
+    "temporarilyClosed": "Sementara tutup",
+    "inStock": "Tersedia",
+    "lowStock": "Stok menipis",
+    "outOfStock": "Stok habis"
+  },
+  "stock": {
+    "items": {
+      "chips": "Keripik tortilla",
+      "sauceBolo": "Saus bolognese",
+      "sauceMush": "Saus jamur",
+      "sauceCheese": "Saus keju",
+      "teaBag": "Kantong teh",
+      "cheeseFoam": "Keju foam",
+      "fizzyBase": "Base fizzy",
+      "packFood": "Nampan makanan",
+      "packDrink": "Set cup minum",
+      "packStack": "Set KeCup bertumpuk"
+    }
+  },
+  "costing": {
+    "title": "Biaya resep",
+    "perPortion": "Per porsi",
+    "exact": "Tepat",
+    "rounded": "Dibulatkan",
+    "batch": "Batch",
+    "yield": "Hasil",
+    "estimate": "Estimasi",
+    "applyCost": "Terapkan sebagai biaya unit",
+    "chips": "Keripik tortilla",
+    "sauceBolo": "Saus bolognese",
+    "sauceMush": "Saus jamur",
+    "sauceCheese": "Saus keju",
+    "teaBag": "Kantong teh",
+    "cheeseFoam": "Keju foam",
+    "fizzyBase": "Base fizzy",
+    "packFood": "Nampan makanan",
+    "packDrink": "Set cup minum",
+    "packStack": "Set KeCup bertumpuk",
+    "lines": {
+      "tortillaChips": "Keripik tortilla",
+      "sauceBase": "Saus dasar tomat",
+      "mincedBeef": "Daging sapi cincang",
+      "onion": "Bawang bombay",
+      "garlic": "Bawang putih",
+      "margarine": "Margarin",
+      "mushroom": "Jamur",
+      "milk": "Susu",
+      "flour": "Tepung",
+      "cheeseBlock": "Keju blok",
+      "creamCheese": "Cream cheese",
+      "whippingCream": "Whipping cream",
+      "salt": "Garam",
+      "teaBag": "Kantong teh",
+      "lemonSodaBase": "Base lemon soda",
+      "foodTray": "Nampan makanan",
+      "drinkCupSet": "Cup + tutup + sedotan"
+    }
+  },
+  "portal": {
+    "login": {
+      "title": "Portal mitra",
+      "email": "Email",
+      "password": "Kata sandi",
+      "signIn": "Masuk",
+      "error": "Kombinasi email dan kata sandi tidak cocok.",
+      "demo": "Gunakan akun demo"
+    },
+    "nav": {
+      "dashboard": "Dasbor",
+      "cashier": "Kasir",
+      "inventory": "Inventaris",
+      "sales": "Penjualan",
+      "analytics": "Analitik",
+      "settings": "Pengaturan",
+      "logout": "Keluar"
+    },
+    "dashboard": {
+      "greeting": "Selamat datang kembali",
+      "today": "Hari ini sekilas",
+      "revenue": "Pendapatan",
+      "orders": "Pesanan",
+      "avgTicket": "Rata-rata transaksi",
+      "alerts": "Peringatan stok",
+      "sparkline": "7 hari terakhir",
+      "status": "Status outlet"
+    },
+    "cashier": {
+      "title": "Kasir",
+      "charge": "Tagih",
+      "cash": "Tunai",
+      "qris": "QRIS",
+      "change": "Kembalian",
+      "confirm": "Konfirmasi penjualan",
+      "success": "Penjualan tercatat",
+      "insufficientStock": "Stok tidak cukup untuk menyelesaikan penjualan ini",
+      "cartEmpty": "Tambah item untuk mulai penjualan",
+      "tendered": "Uang diterima"
+    },
+    "inventory": {
+      "title": "Inventaris",
+      "item": "Item",
+      "category": "Kategori",
+      "onHand": "Tersedia",
+      "threshold": "Batas minimum",
+      "unitCost": "Biaya unit",
+      "status": "Status",
+      "restock": "Restok",
+      "adjust": "Sesuaikan",
+      "waste": "Catat waste",
+      "movements": "Riwayat pergerakan",
+      "note": "Catatan"
+    },
+    "sales": {
+      "title": "Riwayat penjualan",
+      "date": "Tanggal",
+      "payment": "Pembayaran",
+      "total": "Total",
+      "void": "Batalkan penjualan",
+      "voided": "Dibatalkan",
+      "export": "Ekspor CSV",
+      "empty": "Belum ada penjualan"
+    },
+    "analytics": {
+      "title": "Analitik",
+      "revenueTrend": "Pendapatan & laba",
+      "topItems": "Item terlaris",
+      "mix": "Komposisi produk",
+      "payments": "Pembayaran",
+      "heatmap": "Penjualan per jam",
+      "unitEcon": "Ekonomi unit",
+      "price": "Harga",
+      "hpp": "HPP",
+      "hppPct": "HPP %",
+      "profit": "Laba",
+      "units": "Terjual",
+      "payback": "Balik modal",
+      "whatIf": "Simulasi biaya",
+      "pricingInsight": "Insight harga",
+      "suggest": "Harga yang disarankan"
+    },
+    "settings": {
+      "title": "Pengaturan outlet",
+      "profile": "Profil outlet",
+      "whatsapp": "Nomor WhatsApp",
+      "instagram": "Instagram",
+      "hours": "Jam buka",
+      "soldOut": "Habis hari ini",
+      "tempClosed": "Sementara tutup",
+      "saved": "Tersimpan — langsung tayang di situs publik"
+    }
+  }
+}
