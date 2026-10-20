@@ -37,19 +37,33 @@ export function LipsCursor() {
     let targetY = -100
     let currentX = -100
     let currentY = -100
+    let primed = false
     let frame = 0
+    let last = performance.now()
 
     const onMove = (event: MouseEvent) => {
       targetX = event.clientX
       targetY = event.clientY
+      // Snap on the first move so the mark doesn't fly in from the corner.
+      if (!primed) {
+        currentX = targetX
+        currentY = targetY
+        primed = true
+      }
       setPucker(isInteractive(event.target))
     }
 
-    const tick = () => {
-      currentX += (targetX - currentX) * 0.22
-      currentY += (targetY - currentY) * 0.22
+    // Frame-rate independent follow (~30ms time constant): a hint of drag,
+    // no perceptible lag. The element itself must stay transition-free —
+    // a CSS transition here re-interpolates every frame and doubles the delay.
+    const tick = (now: number) => {
+      const dt = Math.min((now - last) / 1000, 0.05)
+      last = now
+      const ease = 1 - Math.exp(-dt * 36)
+      currentX += (targetX - currentX) * ease
+      currentY += (targetY - currentY) * ease
       if (cursorRef.current) {
-        cursorRef.current.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`
+        cursorRef.current.style.transform = `translate3d(${currentX}px, ${currentY}px, 0) translate(-50%, -50%)`
       }
       frame = requestAnimationFrame(tick)
     }
@@ -115,9 +129,17 @@ export function LipsCursor() {
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[90]">
       <div
         ref={cursorRef}
-        className={cn('fixed left-0 top-0 transition-transform duration-100', pucker && 'scale-125')}
+        className="fixed left-0 top-0 will-change-transform"
       >
-        <Lips className="h-6 w-11 text-ketchup drop-shadow-sm" />
+        {/* Scale lives on a child so it never fights the positional transform. */}
+        <div
+          className={cn(
+            'transition-transform duration-150 ease-out',
+            pucker ? 'scale-125' : 'scale-100',
+          )}
+        >
+          <Lips className="h-6 w-11 text-ketchup drop-shadow-sm" />
+        </div>
       </div>
 
       {stamps.map((stamp) => (

@@ -9,7 +9,6 @@ import Menu from './pages/public/Menu'
 import Build from './pages/public/Build'
 import Outlets from './pages/public/Outlets'
 import OutletDetail from './pages/public/OutletDetail'
-import Story from './pages/public/Story'
 import Franchise from './pages/public/Franchise'
 import NotFound from './pages/public/NotFound'
 
@@ -33,7 +32,6 @@ export const router = createBrowserRouter(
         { path: 'build', element: <Build /> },
         { path: 'outlets', element: <Outlets /> },
         { path: 'outlets/:slug', element: <OutletDetail /> },
-        { path: 'story', element: <Story /> },
         { path: 'franchise', element: <Franchise /> },
         { path: 'lab/cup', element: <CupLab /> },
         { path: 'lab/brand', element: <BrandLab /> },

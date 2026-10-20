@@ -10,7 +10,6 @@ const NAV_LINKS = [
   { to: '/menu', key: 'nav.menu' },
   { to: '/build', key: 'nav.build' },
   { to: '/outlets', key: 'nav.outlets' },
-  { to: '/story', key: 'nav.story' },
   { to: '/franchise', key: 'nav.franchise' },
 ]
 

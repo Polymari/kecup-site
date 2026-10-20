@@ -16,7 +16,6 @@ Playful, pun-forward, a little flirty but class-appropriate — the "kecup" (kis
 | `nav.menu` | Menu | Menu |
 | `nav.build` | Build a Cup | Rakit Cup |
 | `nav.outlets` | Outlets | Outlet |
-| `nav.story` | Our Story | Cerita Kami |
 | `nav.franchise` | Franchise | Kemitraan |
 | `nav.order` | Order | Pesan |
 | `nav.cart` | Cart | Keranjang |
@@ -63,11 +62,9 @@ Playful, pun-forward, a little flirty but class-appropriate — the "kecup" (kis
 | `outlets.closed` | Closed | Tutup |
 | `outlets.orderHere` | Order from here | Pesan dari sini |
 
-### Story / franchise
+### Franchise
 | Key | EN | ID |
 |-----|----|----|
-| `story.nameTitle` | Why "KeCup"? | Kenapa "KeCup"? |
-| `story.name` | *Kecup* is the little kiss you blow — paired with *cup*, it's a kiss of flavor in one cup. | *Kecup* itu kecupan kecil — digabung dengan *cup*, jadi sekecup rasa dalam satu cup. |
 | `franchise.title` | Every neighborhood deserves a KeCup | Setiap lingkungan layak punya KeCup |
 | `franchise.sub` | Own a KeCup cart, kiosk, or café. | Miliki gerobak, kios, atau kafe KeCup. |
 | `franchise.calcTitle` | Estimate your earnings | Perkirakan pendapatanmu |

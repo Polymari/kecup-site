@@ -19,7 +19,6 @@
     "menu": "Menu",
     "build": "Rakit Cup",
     "outlets": "Outlet",
-    "story": "Cerita Kami",
     "franchise": "Kemitraan",
     "order": "Pesan",
     "cart": "Keranjang",
@@ -132,24 +131,6 @@
     "map": "Buka di Google Maps",
     "whatsapp": "WhatsApp outlet ini",
     "line": "Craving Line"
-  },
-  "story": {
-    "title": "Cerita Kami",
-    "nameTitle": "Kenapa \"KeCup\"?",
-    "name": "*Kecup* itu kecupan kecil — digabung dengan *cup*, jadi sekecup rasa dalam satu cup.",
-    "values": "Nilai kami",
-    "team": "Tim",
-    "timeline": "Perjalanan",
-    "valuesList": {
-      "oneHand": "Satu tangan",
-      "crunch": "Renyah dulu",
-      "share": "Bagi kecupnya"
-    },
-    "milestones": {
-      "y2024": "Proyek kelas dapat nama.",
-      "y2025": "Booth pertama di BINUS Anggrek.",
-      "y2026": "Craving Line resmi dibuka."
-    }
   },
   "franchise": {
     "title": "Setiap lingkungan layak punya KeCup",

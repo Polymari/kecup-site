@@ -82,7 +82,6 @@ test('navigating away from the home hero keeps the app alive', async ({ page }) 
   const pages: Array<[string, RegExp]> = [
     ['Menu', /\/menu$/],
     ['Outlets', /\/outlets$/],
-    ['Our Story', /\/story$/],
     ['Franchise', /\/franchise$/],
   ]
 

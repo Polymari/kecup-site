@@ -9,7 +9,6 @@ const EXPLORE = [
   { to: '/menu', key: 'nav.menu' },
   { to: '/build', key: 'nav.build' },
   { to: '/outlets', key: 'nav.outlets' },
-  { to: '/story', key: 'nav.story' },
 ]
 
 const PARTNER = [

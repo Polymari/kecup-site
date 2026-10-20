@@ -90,9 +90,6 @@ Left: step panel (bottom-sheet on mobile). Right: sticky 3D stage in an Arch fra
 ### Outlets (`/outlets`, `/outlets/:slug`)
 **"The Craving Line"** — a transit-map metaphor: an animated SVG line (station positions via `getPointAtLength` so they're not hand-placed) that draws in on scroll, a tiny cup icon traveling along it, station dots that pop open into outlet cards (hours, WhatsApp, Maps link, "Order from here"), live open/closed dots computed against WIB. Plain-list fallback for accessibility. Avoids any mapping dependency. Detail page: hero, status badge, today-highlighted hours table, live availability, quick WA + Maps actions. Unknown slug → 404.
 
-### Story (`/story`)
-Fictional "big brand" narrative appropriate for a class project: milestone timeline (pinned horizontal scroll), an animated explanation of the **"Kecup"** name (a little kiss + cup = "a kiss of flavor in one cup"), brand values ("One hand," "Crunch first," "Share the kecup"), placeholder team polaroids on a checkered tablecloth, logo reused here.
-
 ### Franchise (`/franchise`)
 Hero: a 3D grid of low-poly MiniCups popping up in a rippling checkerboard ("one cup becomes many"); 2D fallback. Stats (grounded fictional unit economics — drink HPP%, avg profit/cup, break-even cups). Packages: Regular / Large / Jumbo as cups of increasing size with a hover liquid-fill, each listing investment range, space/staff, inclusions, "Pick this size" (preselects the apply form). Illustrative **profit calculator** with sliders → animated results card (revenue/COGS/opex/profit bar chart, payback, break-even cups/day) + disclaimer. A 5-step "how it works" scroll path with a chip rolling along it. FAQ accordion (Radix). Multi-step apply form (About you / Location & budget / Message) with Zod validation → WhatsApp or mailto, lips-confetti on send.
 

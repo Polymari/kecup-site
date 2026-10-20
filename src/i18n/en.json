@@ -19,7 +19,6 @@
     "menu": "Menu",
     "build": "Build a Cup",
     "outlets": "Outlets",
-    "story": "Our Story",
     "franchise": "Franchise",
     "order": "Order",
     "cart": "Cart",
@@ -132,24 +131,6 @@
     "map": "Open in Google Maps",
     "whatsapp": "WhatsApp this outlet",
     "line": "Craving Line"
-  },
-  "story": {
-    "title": "Our Story",
-    "nameTitle": "Why \"KeCup\"?",
-    "name": "*Kecup* is the little kiss you blow — paired with *cup*, it's a kiss of flavor in one cup.",
-    "values": "Our values",
-    "team": "The team",
-    "timeline": "Milestones",
-    "valuesList": {
-      "oneHand": "One hand",
-      "crunch": "Crunch first",
-      "share": "Share the kecup"
-    },
-    "milestones": {
-      "y2024": "A class project gets a name.",
-      "y2025": "First booth at BINUS Anggrek.",
-      "y2026": "The Craving Line opens."
-    }
   },
   "franchise": {
     "title": "Every neighborhood deserves a KeCup",
