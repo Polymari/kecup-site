@@ -4,7 +4,7 @@ export const SITE = {
   instagram: '@eatkecup',
   contactEmail: 'partner@kecup.example',
   brandWhatsapp: '6281200000000',
-  cupStyle: 'toon' as 'toon' | 'realistic',
+  cupStyle: 'realistic' as 'toon' | 'realistic',
   showDemoLogin: true,
 } as const
 

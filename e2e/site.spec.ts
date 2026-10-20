@@ -72,3 +72,31 @@ test('3D cup canvases mount without console errors', async ({ page }) => {
 
   expect(errors).toEqual([])
 })
+
+
+test('navigating away from the home hero keeps the app alive', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+
+  const nav = page.getByRole('navigation', { name: 'Main' })
+  const pages: Array<[string, RegExp]> = [
+    ['Menu', /\/menu$/],
+    ['Outlets', /\/outlets$/],
+    ['Our Story', /\/story$/],
+    ['Franchise', /\/franchise$/],
+  ]
+
+  for (const [label, url] of pages) {
+    await page.goto('/')
+    await expect(page.getByTestId('preloader')).toBeHidden({ timeout: 10_000 })
+    // Scroll into the pinned hero so ScrollTrigger has wrapped it in a pin-spacer.
+    await page.mouse.wheel(0, 600)
+    await page.waitForTimeout(400)
+    await nav.getByRole('link', { name: label, exact: true }).first().click()
+    await expect(page).toHaveURL(url)
+    await expect(page.getByText('Unexpected Application Error')).toHaveCount(0)
+    await expect(page.locator('main#main')).not.toBeEmpty()
+  }
+
+  expect(errors).toEqual([])
+})

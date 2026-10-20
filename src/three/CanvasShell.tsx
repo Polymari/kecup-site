@@ -65,7 +65,8 @@ export function CanvasShell({ children, className = '', fit, environment = false
   return (
     <div ref={containerRef} className={className}>
       <Canvas
-        flat
+        // Realistic materials get filmic tone mapping; toon keeps flat brand colours.
+        flat={!environment}
         dpr={dpr}
         camera={{ fov: 30, position: [0, 1, 8] }}
         gl={{ antialias: true, alpha: true }}
@@ -73,18 +74,31 @@ export function CanvasShell({ children, className = '', fit, environment = false
         aria-hidden
       >
         <CameraRig fit={fit} />
-        {/* Toon shading reads best with a strong ambient base and one clear key light. */}
-        <ambientLight intensity={environment ? 0.6 : 1.9} />
-        <directionalLight position={[3, 5, 4]} intensity={environment ? 1.4 : 1.8} />
-        <directionalLight position={[-4, 2, -3]} intensity={0.45} />
         {environment ? (
-          <Environment resolution={128} frames={1}>
-            <Lightformer form="rect" intensity={3} position={[0, 4, 3]} scale={[6, 2, 1]} />
-            <Lightformer form="rect" intensity={1.6} position={[-4, 1, 1]} rotation-y={Math.PI / 2} scale={[4, 6, 1]} />
-            <Lightformer form="rect" intensity={1.2} position={[4, 0, 2]} rotation-y={-Math.PI / 2} scale={[3, 5, 1]} color="#FFE8B8" />
-            <Lightformer form="ring" intensity={0.8} position={[0, -3, -4]} scale={4} color="#F7D774" />
-          </Environment>
-        ) : null}
+          <>
+            {/* Product-shot lighting: warm sky/floor bounce, a soft key, and a rim light
+                from behind so chip edges and the sauce gloss catch the light. */}
+            <hemisphereLight args={['#FFF6E8', '#B98A5A', 0.9]} />
+            <directionalLight position={[2.5, 5, 4]} intensity={2.4} color="#FFF4E2" />
+            <directionalLight position={[-3, 3.5, -4]} intensity={1.6} color="#FFE6C2" />
+            <directionalLight position={[-4, 1, 3]} intensity={0.5} color="#E8F0FF" />
+            <Environment resolution={256} frames={1}>
+              {/* Tall strips → crisp vertical highlights on the clear cup, like a studio photo. */}
+              <Lightformer form="rect" intensity={10} position={[-3.5, 1.5, 3]} scale={[0.8, 8]} />
+              <Lightformer form="rect" intensity={6} position={[3.5, 1.5, 2.5]} scale={[0.5, 8]} color="#FFF1DC" />
+              <Lightformer form="rect" intensity={2.2} position={[0, 6, 1]} scale={[6, 3]} />
+              <Lightformer form="rect" intensity={1.2} position={[0, 1, -6]} scale={[8, 4]} color="#FFE2B8" />
+              <Lightformer form="rect" intensity={0.6} position={[0, -5, 0]} scale={[8, 8]} color="#E9C489" />
+            </Environment>
+          </>
+        ) : (
+          <>
+            {/* Toon shading reads best with a strong ambient base and one clear key light. */}
+            <ambientLight intensity={1.9} />
+            <directionalLight position={[3, 5, 4]} intensity={1.8} />
+            <directionalLight position={[-4, 2, -3]} intensity={0.45} />
+          </>
+        )}
         <PerformanceMonitor onDecline={() => setDpr(1)} onIncline={() => setDpr(1.5)} />
         {children}
       </Canvas>

@@ -9,7 +9,7 @@ export type CameraFit = {
   fov?: number
 }
 
-export const DEFAULT_FIT: Required<CameraFit> = { width: 2.7, height: 3.55, elevation: 0.2, fov: 30 }
+export const DEFAULT_FIT: Required<CameraFit> = { width: 2.7, height: 3.55, elevation: 0.3, fov: 30 }
 
 /** Distance at which a width×height box fills a perspective frustum of the given aspect. */
 export function fitDistance(fit: CameraFit, aspect: number): number {

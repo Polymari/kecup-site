@@ -82,7 +82,7 @@ export default function CupLab() {
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
       <h1 className="font-display text-4xl font-bold text-ketchup">Cup Lab</h1>
-      <p className="mt-1 text-ink/70">Toon vs realistic — same geometry, two material sets. Drag a cup to turn it.</p>
+      <p className="mt-1 text-ink/70">Toon vs realistic (the site default) — same geometry, two material sets. Drag a cup to turn it.</p>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1fr_280px]">
         <div className="rounded-[2rem] border-[3px] border-ink bg-cream-deep p-4">

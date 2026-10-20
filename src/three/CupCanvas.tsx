@@ -1,5 +1,6 @@
 import { PresentationControls } from '@react-three/drei'
 import type { DrinkKey, FlavorKey } from '@/data/types'
+import { CUP_STYLE } from '@/config/site'
 import { useFinePointer } from '@/hooks/useTouch'
 import type { CameraFit } from './cameraFit'
 import type { CupAnimationState } from './cupState'
@@ -24,7 +25,7 @@ type CupCanvasProps = {
 export default function CupCanvas({
   flavor,
   drink,
-  style = 'toon',
+  style = CUP_STYLE,
   state,
   autoSpin = true,
   draggable = false,

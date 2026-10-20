@@ -45,8 +45,8 @@ Markdown plans for the **KeCup** website + franchisee portal (university Venture
 | 12–17 Portal (login/auth, dashboard, cashier POS, inventory, sales, analytics, settings) | ✅ done (static demo data + live RPC path) |
 | 18–20 3D cup (toon + realistic materials, explode states, lab compare w/ FPS, builder integration) | ✅ done |
 | 21–23 Wow layer (preloader + hero assembly scroll sequence, lips cursor, kiss stamps + counter, `kecup` easter egg, magnetic CTAs, velocity marquee, receipt print, Craving Line train, sticker tilt, login stamp) | ✅ done (franchise 3D grid ripple trimmed) |
-| 24 QA | ✅ unit 159 · e2e 8 · lint/typecheck/build clean |
-| 26 3D + site debug pass | ✅ cup rebuilt to logo proportions (inked toon glass, layered tea, filled chip bowl, sauce/drips), camera framing, real hero assembly intro, builder empty/partial states, flavor-switcher 3D cup, lazy three.js chunk, portal heatmap/labels/what-if fixes, i18n gaps |
+| 24 QA | ✅ unit 168 · e2e 9 · lint/typecheck/build clean |
+| 26 3D + site debug pass | ✅ realistic cup (default): clear-PET plastic, textured curled tortilla chips packed inside the bowl, per-flavor sauces (mince / mushroom / melted cheese), menu-accurate teas (cheese-foam Cloudy, iced bubbly Fizzy); toon style kept; hero pin no longer crashes route changes; camera framing, real hero assembly intro, builder empty/partial states, flavor-switcher 3D cup, lazy three.js chunk, portal heatmap/labels/what-if fixes, i18n gaps |
 | 10 / 25 Deploy | 🔒 human-gated (Vercel + GH Pages accounts) — runbook in `RUNBOOK.md` |
 
-Validation: `npm test` (159) · `npm run test:e2e` (8) · `npm run typecheck` · `npm run lint` · `npm run build` all green.
+Validation: `npm test` (168) · `npm run test:e2e` (9) · `npm run typecheck` · `npm run lint` · `npm run build` all green.

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef } from 'react'
+import { lazy, Suspense, useLayoutEffect, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { gsap } from '@/anim/gsap'
 import { TransitionLink } from '@/anim/TransitionLink'
@@ -28,7 +28,10 @@ export function HeroAssembly({ ready }: { ready: boolean }) {
   const closeRef = useRef<HTMLParagraphElement>(null)
   const calloutRefs = useRef<Array<HTMLLIElement | null>>([])
 
-  useEffect(() => {
+  // Layout effect on purpose: ScrollTrigger's pin wraps the section in a
+  // pin-spacer, which must be reverted *before* React removes the DOM on a
+  // route change, otherwise React's removeChild throws (NotFoundError).
+  useLayoutEffect(() => {
     if (!ready) return
     const section = sectionRef.current
     if (!section) return
@@ -106,90 +109,94 @@ export function HeroAssembly({ ready }: { ready: boolean }) {
     ))
 
   return (
-    <section ref={sectionRef} className="relative min-h-dvh overflow-hidden px-6 pb-16 pt-24 lg:pt-20">
-      <div className="mx-auto grid min-h-[calc(100dvh-10rem)] max-w-6xl items-center gap-2 lg:grid-cols-[1.05fr_1fr] lg:gap-8">
-        <div
-          ref={stageRef}
-          className="pointer-events-none relative order-1 h-[44vh] min-h-[280px] lg:order-2 lg:h-[76vh]"
-        >
-          <Suspense fallback={null}>
-            <CupCanvas
-              flavor="bolo"
-              drink="tea-cloudy"
-              state={cupState}
-              autoSpin={!reducedMotion}
-              className="h-full w-full"
-            />
-          </Suspense>
-        </div>
-
-        <div ref={textRef} className="relative z-10 order-2 text-center lg:order-1 lg:text-left">
-          <div className="relative inline-block">
-            <h1
-              ref={headlineRef}
-              className="font-display text-7xl font-bold leading-none text-ketchup drop-shadow-sm sm:text-8xl lg:text-9xl"
+    // Stable React-owned parent for GSAP's pin-spacer, so React never has to
+    // remove a node that GSAP re-parented.
+    <div>
+      <section ref={sectionRef} className="relative min-h-dvh overflow-hidden px-6 pb-16 pt-24 lg:pt-20">
+        <div className="mx-auto grid min-h-[calc(100dvh-10rem)] max-w-6xl items-center gap-2 lg:grid-cols-[1.05fr_1fr] lg:gap-8">
+          <div
+            ref={stageRef}
+            className="pointer-events-none relative order-1 h-[44vh] min-h-[280px] lg:order-2 lg:h-[76vh]"
+          >
+            <Suspense fallback={null}>
+              <CupCanvas
+                flavor="bolo"
+                drink="tea-cloudy"
+                state={cupState}
+                autoSpin={!reducedMotion}
+                className="h-full w-full"
+              />
+            </Suspense>
+          </div>
+  
+          <div ref={textRef} className="relative z-10 order-2 text-center lg:order-1 lg:text-left">
+            <div className="relative inline-block">
+              <h1
+                ref={headlineRef}
+                className="font-display text-7xl font-bold leading-none text-ketchup drop-shadow-sm sm:text-8xl lg:text-9xl"
+              >
+                {splitHeadline('KeCup')}
+              </h1>
+              <div ref={stampRef} className="absolute -right-10 -top-4 sm:-right-12">
+                <Lips className="h-8 w-14 rotate-12 text-ketchup" />
+              </div>
+            </div>
+            <div ref={copyRef}>
+              <p className="mt-4 font-display text-2xl text-ink sm:text-4xl">{t('hero.tagline')}</p>
+              <p className="mt-3 max-w-xl text-lg text-ink/80 max-lg:mx-auto">{t('hero.sub')}</p>
+            </div>
+  
+            <div
+              ref={ctasRef}
+              className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
             >
-              {splitHeadline('KeCup')}
-            </h1>
-            <div ref={stampRef} className="absolute -right-10 -top-4 sm:-right-12">
-              <Lips className="h-8 w-14 rotate-12 text-ketchup" />
+              <MagneticButton>
+                <TransitionLink
+                  to="/build"
+                  className="inline-flex rounded-full border-[3px] border-ink bg-ketchup px-7 py-3 font-display text-lg font-semibold text-cream shadow-sticker transition-transform hover:-translate-y-0.5"
+                >
+                  {t('hero.ctaOrder')}
+                </TransitionLink>
+              </MagneticButton>
+              <MagneticButton>
+                <TransitionLink
+                  to="/menu"
+                  className="inline-flex rounded-full border-[3px] border-ink bg-butter px-7 py-3 font-display text-lg font-semibold text-ink shadow-sticker transition-transform hover:-translate-y-0.5"
+                >
+                  {t('hero.ctaMenu')}
+                </TransitionLink>
+              </MagneticButton>
             </div>
           </div>
-          <div ref={copyRef}>
-            <p className="mt-4 font-display text-2xl text-ink sm:text-4xl">{t('hero.tagline')}</p>
-            <p className="mt-3 max-w-xl text-lg text-ink/80 max-lg:mx-auto">{t('hero.sub')}</p>
-          </div>
-
-          <div
-            ref={ctasRef}
-            className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
-          >
-            <MagneticButton>
-              <TransitionLink
-                to="/build"
-                className="inline-flex rounded-full border-[3px] border-ink bg-ketchup px-7 py-3 font-display text-lg font-semibold text-cream shadow-sticker transition-transform hover:-translate-y-0.5"
-              >
-                {t('hero.ctaOrder')}
-              </TransitionLink>
-            </MagneticButton>
-            <MagneticButton>
-              <TransitionLink
-                to="/menu"
-                className="inline-flex rounded-full border-[3px] border-ink bg-butter px-7 py-3 font-display text-lg font-semibold text-ink shadow-sticker transition-transform hover:-translate-y-0.5"
-              >
-                {t('hero.ctaMenu')}
-              </TransitionLink>
-            </MagneticButton>
-          </div>
         </div>
-      </div>
-
-      <ul className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 space-y-24 lg:block xl:right-16">
-        {CALLOUTS.map((key, index) => (
-          <li
-            key={key}
-            ref={(node) => {
-              calloutRefs.current[index] = node
-            }}
-            className="opacity-0"
-            style={{ transform: 'translateX(30px)' }}
+  
+        <ul className="pointer-events-none absolute right-8 top-1/2 hidden -translate-y-1/2 space-y-24 lg:block xl:right-16">
+          {CALLOUTS.map((key, index) => (
+            <li
+              key={key}
+              ref={(node) => {
+                calloutRefs.current[index] = node
+              }}
+              className="opacity-0"
+              style={{ transform: 'translateX(30px)' }}
+            >
+              <span className="block max-w-[220px] rounded-xl border-[3px] border-ink bg-cream/95 px-3 py-2 font-display text-sm font-semibold text-ink shadow-sticker">
+                {t(key)}
+              </span>
+            </li>
+          ))}
+        </ul>
+  
+        <div className="pointer-events-none absolute inset-x-0 bottom-10 z-10 flex justify-center px-6">
+          <p
+            ref={closeRef}
+            className="text-center font-display text-xl font-semibold text-brick opacity-0 sm:text-2xl"
+            style={{ transform: 'translateY(16px)' }}
           >
-            <span className="block max-w-[220px] rounded-xl border-[3px] border-ink bg-cream/95 px-3 py-2 font-display text-sm font-semibold text-ink shadow-sticker">
-              {t(key)}
-            </span>
-          </li>
-        ))}
-      </ul>
-
-      <div className="pointer-events-none absolute inset-x-0 bottom-10 z-10 flex justify-center px-6">
-        <p
-          ref={closeRef}
-          className="text-center font-display text-xl font-semibold text-brick opacity-0 sm:text-2xl"
-          style={{ transform: 'translateY(16px)' }}
-        >
-          {t('scroll.end')}
-        </p>
-      </div>
-    </section>
+            {t('scroll.end')}
+          </p>
+        </div>
+      </section>
+    </div>
   )
 }
