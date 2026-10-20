@@ -20,7 +20,10 @@ export function MenuItemCard({ item, available }: MenuItemCardProps) {
   const savings = item.comparePrice ? item.comparePrice - item.price : 0
 
   return (
-    <Card as="article" className="relative flex flex-col p-4">
+    <Card
+      as="article"
+      className="relative flex flex-col p-4 transition-transform duration-200 hover:-rotate-1 hover:scale-[1.015]"
+    >
       {item.kind === 'combo' ? (
         <div className="absolute -right-2 -top-3 z-10">
           <Sticker tone="lime">{t('combo.bestValue')}</Sticker>

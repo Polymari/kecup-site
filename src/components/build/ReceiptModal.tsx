@@ -68,7 +68,7 @@ export function ReceiptModal({
             </Dialog.Close>
           </div>
 
-          <div className="mt-4 rounded-xl border-2 border-dashed border-brick bg-cream-deep p-4 font-mono text-sm text-ink">
+          <div className="mt-4 animate-[receipt-print_0.6s_ease-out] rounded-xl border-2 border-dashed border-brick bg-cream-deep p-4 font-mono text-sm text-ink">
             <p className="text-center font-bold">KECUP · {outlet.name}</p>
             <p className="text-center text-xs">
               {t('build.orderCode')}: {code}
@@ -122,6 +122,7 @@ export function ReceiptModal({
           </a>
         </Dialog.Content>
       </Dialog.Portal>
+      <style>{`@keyframes receipt-print { from { transform: translateY(-24px); clip-path: inset(0 0 100% 0) } to { transform: translateY(0); clip-path: inset(0 0 0 0) } }`}</style>
     </Dialog.Root>
   )
 }

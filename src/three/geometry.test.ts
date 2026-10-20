@@ -55,7 +55,7 @@ describe('chip placement', () => {
 describe('animation state + gradient map', () => {
   it('creates the default animation proxy values', () => {
     const state = createCupState()
-    expect(state).toEqual({ fill: 0.72, drop: 0, bob: 0, spin: 0, sauceSquash: 1 })
+    expect(state).toEqual({ fill: 0.72, drop: 0, bob: 0, spin: 0, sauceSquash: 1, explode: 0 })
   })
 
   it('creates a 3-step nearest-filter gradient texture', () => {

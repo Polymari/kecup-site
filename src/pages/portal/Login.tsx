@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { Lips } from '@/components/brand/Lips'
 import { Wordmark } from '@/components/brand/Wordmark'
 import { useAuth } from '@/lib/auth'
+import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { SITE } from '@/config/site'
 import { cn } from '@/lib/cn'
 
@@ -15,6 +16,8 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
   const [busy, setBusy] = useState(false)
+  const [stamped, setStamped] = useState(false)
+  const reducedMotion = useReducedMotion()
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -25,7 +28,8 @@ export default function Login() {
       setError(true)
       return
     }
-    navigate('/portal/dashboard')
+    setStamped(true)
+    window.setTimeout(() => navigate('/portal/dashboard'), reducedMotion ? 0 : 550)
   }
 
   const useDemo = async () => {
@@ -108,7 +112,17 @@ export default function Login() {
         </form>
       </div>
 
+      {stamped ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-cream/85">
+          <div className="animate-[stamp-in_0.5s_ease-out] text-center">
+            <Lips className="mx-auto h-12 w-20 text-ketchup" />
+            <p className="mt-2 font-display text-4xl font-bold text-ketchup">KECUP!</p>
+          </div>
+        </div>
+      ) : null}
+
       <style>{`@keyframes shake { 0%,100% { transform: translateX(0) } 25% { transform: translateX(-8px) } 75% { transform: translateX(8px) } }`}</style>
+      <style>{`@keyframes stamp-in { from { scale: 0.4; rotate: -12deg; opacity: 0 } 60% { scale: 1.15 } to { scale: 1; rotate: -6deg; opacity: 1 } }`}</style>
     </div>
   )
 }

@@ -3,14 +3,12 @@ import { useTranslation } from 'react-i18next'
 import { TransitionLink } from '@/anim/TransitionLink'
 import { Badge } from '@/components/brand/Badge'
 import { Card } from '@/components/brand/Card'
-import { CheckerBand } from '@/components/brand/CheckerBand'
 import { Drip } from '@/components/brand/Drip'
-import { Lips } from '@/components/brand/Lips'
 import { Marquee } from '@/components/brand/Marquee'
 import { Photo } from '@/components/brand/Photo'
-import { Sparkle } from '@/components/brand/Sparkle'
 import { Sticker } from '@/components/brand/Sticker'
-import { MagneticButton } from '@/components/brand/MagneticButton'
+import { Preloader } from '@/components/home/Preloader'
+import { HeroAssembly } from '@/components/home/HeroAssembly'
 import { MenuItemCard } from '@/components/menu/MenuItemCard'
 import { MENU_ITEMS } from '@/data/menu'
 import type { FlavorKey } from '@/data/types'
@@ -28,6 +26,7 @@ const FLAVORS: { key: FlavorKey; itemId: string; color: string }[] = [
 export default function Home() {
   const { t } = useTranslation()
   const [flavor, setFlavor] = useState<FlavorKey>('bolo')
+  const [heroReady, setHeroReady] = useState(false)
   const combos = MENU_ITEMS.filter((item) => item.kind === 'combo')
   const outlets = useOutlets()
   const anggrek = outlets[0]
@@ -35,38 +34,8 @@ export default function Home() {
 
   return (
     <>
-      <section className="relative mx-auto flex max-w-6xl flex-col items-center px-6 pb-20 pt-14 text-center">
-        <Sparkle className="absolute left-10 top-10 h-8 w-8 text-sun" />
-        <Lips className="absolute right-12 top-16 h-7 w-12 rotate-12 text-ketchup" />
-        <h1 className="font-display text-7xl font-bold text-ketchup sm:text-8xl">KeCup</h1>
-        <p className="mt-4 max-w-2xl font-display text-2xl text-ink sm:text-4xl">
-          {t('hero.tagline')}
-        </p>
-        <p className="mt-3 max-w-xl text-lg text-ink/80">{t('hero.sub')}</p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <MagneticButton>
-            <TransitionLink
-              to="/build"
-              className="rounded-full border-[3px] border-ink bg-ketchup px-7 py-3 font-display text-lg font-semibold text-cream shadow-sticker transition-transform hover:-translate-y-0.5"
-            >
-              {t('hero.ctaOrder')}
-            </TransitionLink>
-          </MagneticButton>
-          <MagneticButton>
-            <TransitionLink
-              to="/menu"
-              className="rounded-full border-[3px] border-ink bg-butter px-7 py-3 font-display text-lg font-semibold text-ink shadow-sticker transition-transform hover:-translate-y-0.5"
-            >
-              {t('hero.ctaMenu')}
-            </TransitionLink>
-          </MagneticButton>
-        </div>
-        <div className="mt-12 w-full max-w-md">
-          <Photo photoKey="hero-lifestyle" className="w-full rotate-1" />
-        </div>
-      </section>
-
-      <CheckerBand cell={26} rows={2} />
+      <Preloader onComplete={() => setHeroReady(true)} />
+      <HeroAssembly ready={heroReady} />
 
       <div className="border-y-[3px] border-ink bg-ketchup py-3">
         <Marquee speed={22}>

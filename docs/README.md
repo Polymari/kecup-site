@@ -43,8 +43,8 @@ Markdown plans for the **KeCup** website + franchisee portal (university Venture
 | 9 Home 2D (skeleton-complete milestone) | ✅ done |
 | 11 Supabase backend (4 migrations, seed.ts, verify-backend.ts, typed client) | ✅ done — needs human Supabase setup to run |
 | 12–17 Portal (login/auth, dashboard, cashier POS, inventory, sales, analytics, settings) | ✅ done (static demo data + live RPC path) |
-| 18–20 3D cup (toon model, CanvasShell, builder + lab integration) | ✅ done (realistic variant pending) |
-| 21–23 Wow layer (lips cursor, kiss stamps + counter, `kecup` easter egg, magnetic CTAs, velocity marquee) | ✅ done |
+| 18–20 3D cup (toon + realistic materials, explode states, lab compare w/ FPS, builder integration) | ✅ done |
+| 21–23 Wow layer (preloader + hero assembly scroll sequence, lips cursor, kiss stamps + counter, `kecup` easter egg, magnetic CTAs, velocity marquee, receipt print, Craving Line train, sticker tilt, login stamp) | ✅ done (franchise 3D grid ripple trimmed) |
 | 24 QA | ✅ unit 147 · e2e 7 · lint/typecheck/build clean |
 | 10 / 25 Deploy | 🔒 human-gated (Vercel + GH Pages accounts) — runbook in `RUNBOOK.md` |
 

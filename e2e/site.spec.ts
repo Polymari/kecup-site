@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('language toggle switches the site to Indonesian', async ({ page }) => {
   await page.goto('/')
+  await expect(page.getByTestId('preloader')).toBeHidden({ timeout: 10_000 })
   await page.getByRole('button', { name: 'id', exact: true }).click()
   await expect(page.getByRole('link', { name: 'Rakit Cup' }).first()).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'id')

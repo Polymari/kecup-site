@@ -40,6 +40,7 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
   const { t } = useTranslation()
   const reducedMotion = useReducedMotion()
   const pathRef = useRef<SVGPathElement | null>(null)
+  const trainRef = useRef<SVGGElement | null>(null)
   const stations = useStationPositions(pathRef, outlets.length)
 
   useEffect(() => {
@@ -59,6 +60,24 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
       },
     })
     return () => trigger.kill()
+  }, [reducedMotion])
+
+  useEffect(() => {
+    const path = pathRef.current
+    const train = trainRef.current
+    if (!path || !train || typeof path.getTotalLength !== 'function' || reducedMotion) return
+    const length = path.getTotalLength()
+    const move = ScrollTrigger.create({
+      trigger: path,
+      start: 'top 90%',
+      end: 'bottom 20%',
+      scrub: 0.4,
+      onUpdate: (self) => {
+        const point = path.getPointAtLength(length * self.progress)
+        train.setAttribute('transform', `translate(${point.x}, ${point.y})`)
+      },
+    })
+    return () => move.kill()
   }, [reducedMotion])
 
   return (
@@ -105,6 +124,10 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
             </g>
           )
         })}
+        <g ref={trainRef} transform="translate(40, 110)">
+          <circle r={9} fill="var(--color-sun)" stroke="var(--color-ink)" strokeWidth={4} />
+          <circle r={3} fill="var(--color-ketchup)" />
+        </g>
       </svg>
     </div>
   )
