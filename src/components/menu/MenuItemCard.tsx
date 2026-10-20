@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import type { MenuItem } from '@/data/types'
@@ -24,7 +25,18 @@ const BEST_VALUE_ID = MENU_ITEMS.filter((item) => item.kind === 'combo').reduce(
 export function MenuItemCard({ item, available }: MenuItemCardProps) {
   const { t } = useTranslation()
   const add = useCart((state) => state.add)
+  const [added, setAdded] = useState(false)
   const savings = item.comparePrice ? item.comparePrice - item.price : 0
+
+  const handleAdd = () => {
+    add({
+      menuItemId: item.id,
+      qty: 1,
+      drinkChoice: item.kind === 'combo' ? item.drinkChoices?.[0] : undefined,
+    })
+    setAdded(true)
+    window.setTimeout(() => setAdded(false), 900)
+  }
 
   return (
     <Card
@@ -53,21 +65,27 @@ export function MenuItemCard({ item, available }: MenuItemCardProps) {
       <button
         type="button"
         disabled={!available}
-        onClick={() =>
-          add({
-            menuItemId: item.id,
-            qty: 1,
-            drinkChoice: item.kind === 'combo' ? item.drinkChoices?.[0] : undefined,
-          })
-        }
+        onClick={handleAdd}
         className={`mt-4 inline-flex items-center justify-center gap-2 rounded-full border-[3px] border-ink px-4 py-2 font-display font-semibold transition-transform ${
-          available
-            ? 'bg-ketchup text-cream shadow-sticker hover:-translate-y-0.5 active:translate-y-0'
-            : 'cursor-not-allowed bg-cream-deep text-brick'
+          !available
+            ? 'cursor-not-allowed bg-cream-deep text-brick'
+            : added
+              ? 'scale-105 bg-lime text-ink shadow-sticker'
+              : 'bg-ketchup text-cream shadow-sticker hover:-translate-y-0.5 active:translate-y-0'
         }`}
       >
-        <Plus size={16} aria-hidden />
-        {available ? t('menu.addToCup') : t('menu.soldOut')}
+        {available ? (
+          added ? (
+            <span>{t('menu.added')} 💋</span>
+          ) : (
+            <>
+              <Plus size={16} aria-hidden />
+              <span>{t('menu.addToCup')}</span>
+            </>
+          )
+        ) : (
+          t('menu.soldOut')
+        )}
       </button>
     </Card>
   )

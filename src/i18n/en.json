@@ -58,6 +58,7 @@
       "drinks": "Drinks"
     },
     "addToCup": "Add to cup",
+    "added": "Added!",
     "soldOut": "Sold out",
     "viewPrinted": "View printed menu",
     "selectOutlet": "Ordering from",
@@ -136,6 +137,23 @@
     "title": "Every neighborhood deserves a KeCup",
     "sub": "Own a KeCup cart, kiosk, or café.",
     "calcTitle": "Estimate your earnings",
+    "faqTitle": "FAQ",
+    "spaceLabel": "Space",
+    "staffLabel": "Staff",
+    "faq": [
+      {
+        "q": "How long does setup take?",
+        "a": "From signing to first cup: about two weeks for a cart, four for a café."
+      },
+      {
+        "q": "Do I need F&B experience?",
+        "a": "No — training covers recipes, cashier flow, and stock management."
+      },
+      {
+        "q": "Can I choose my own location?",
+        "a": "Yes. We help assess foot traffic, then build the outlet format around it."
+      }
+    ],
     "disclaimer": "Illustrative only, based on KeCup's recipe costs — not an earnings guarantee.",
     "apply": "Apply now",
     "pickPackage": "Pick this size",
@@ -287,7 +305,8 @@
       "sales": "Sales",
       "analytics": "Analytics",
       "settings": "Settings",
-      "logout": "Sign out"
+      "logout": "Sign out",
+      "outlet": "Outlet"
     },
     "dashboard": {
       "greeting": "Welcome back",
@@ -310,12 +329,27 @@
       "success": "Sale recorded",
       "insufficientStock": "Not enough stock to complete this sale",
       "cartEmpty": "Add items to start a sale",
-      "tendered": "Cash received"
+      "tendered": "Cash received",
+      "cloudy": "Cloudy",
+      "fizzy": "Fizzy"
     },
     "inventory": {
       "title": "Inventory",
       "item": "Item",
       "category": "Category",
+      "categories": {
+        "food": "Food",
+        "drink": "Drink",
+        "packaging": "Packaging"
+      },
+      "kinds": {
+        "sale": "Sale",
+        "restock": "Restock",
+        "adjustment": "Adjustment",
+        "waste": "Waste",
+        "void": "Void",
+        "seed": "Seed"
+      },
       "onHand": "On hand",
       "threshold": "Low threshold",
       "unitCost": "Unit cost",
@@ -368,7 +402,8 @@
       "hours": "Opening hours",
       "soldOut": "Sold out today",
       "tempClosed": "Temporarily closed",
-      "saved": "Saved — live on the public site"
+      "saved": "Saved — live on the public site",
+      "invalidHours": "Closing time must be after opening time"
     }
   },
   "home": {

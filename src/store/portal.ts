@@ -11,6 +11,14 @@ import {
 import type { Movement, PortalSale, StockRow } from '@/lib/demoData'
 import { computeCogs, expandRequirements, fulfilCheck } from '@/lib/recipes'
 import type { OrderLine } from '@/data/types'
+import {
+  isConfigured,
+  supabase,
+  recordSale as supabaseRecordSale,
+  voidSale as supabaseVoidSale,
+  restockStock as supabaseRestock,
+  adjustStock as supabaseAdjust,
+} from '@/lib/supabase'
 
 export interface OutletSettings {
   whatsapp: string
@@ -156,6 +164,21 @@ export const usePortal = create<PortalState>()((set, get) => ({
       movements: [...movements, ...state.movements],
     })
 
+    if (isConfigured) {
+      void supabaseRecordSale({
+        outletId: OUTLETS_BY_SLUG[state.outletSlug].id,
+        payment: input.payment,
+        cashReceived: input.payment === 'cash' ? input.cashReceived : null,
+        items: input.lines.map((l) => ({
+          menu_item_id: l.menuItemId,
+          drink_choice: l.drinkChoice,
+          qty: l.qty,
+        })),
+      }).catch((err) => {
+        console.error('Supabase recordSale error:', err)
+      })
+    }
+
     return { ok: true, sale, lowStock: lowStockRows(stock) }
   },
 
@@ -195,6 +218,12 @@ export const usePortal = create<PortalState>()((set, get) => ({
       movements: [...movements, ...state.movements],
     })
 
+    if (isConfigured) {
+      void supabaseVoidSale(saleId, reason).catch((err) => {
+        console.error('Supabase voidSale error:', err)
+      })
+    }
+
     return { ok: true, sale, lowStock: lowStockRows(stock) }
   },
 
@@ -224,6 +253,18 @@ export const usePortal = create<PortalState>()((set, get) => ({
         ...state.movements,
       ],
     })
+
+    if (isConfigured) {
+      void supabaseRestock({
+        outletId: OUTLETS_BY_SLUG[state.outletSlug].id,
+        stockItemId,
+        qty,
+        unitCost,
+        note,
+      }).catch((err) => {
+        console.error('Supabase restock error:', err)
+      })
+    }
   },
 
   adjust: (stockItemId, delta, kind, note) => {
@@ -247,6 +288,18 @@ export const usePortal = create<PortalState>()((set, get) => ({
         ...state.movements,
       ],
     })
+
+    if (isConfigured) {
+      void supabaseAdjust({
+        outletId: OUTLETS_BY_SLUG[state.outletSlug].id,
+        stockItemId,
+        delta,
+        kind,
+        note,
+      }).catch((err) => {
+        console.error('Supabase adjust error:', err)
+      })
+    }
   },
 
   setUnitCost: (stockItemId, unitCost) => {
@@ -258,13 +311,45 @@ export const usePortal = create<PortalState>()((set, get) => ({
     }))
   },
 
-  updateSettings: (slug, patch) =>
+  updateSettings: (slug, patch) => {
     set((state) => ({
       settings: {
         ...state.settings,
         [slug]: { ...state.settings[slug], ...patch },
       },
-    })),
+    }))
+
+    if (isConfigured && supabase) {
+      const outlet = OUTLETS_BY_SLUG[slug]
+      if (outlet) {
+        if (
+          patch.whatsapp !== undefined ||
+          patch.instagram !== undefined ||
+          patch.hours !== undefined ||
+          patch.temporarilyClosed !== undefined
+        ) {
+          const updatePayload: Record<string, unknown> = {}
+          if (patch.whatsapp !== undefined) updatePayload.whatsapp = patch.whatsapp
+          if (patch.instagram !== undefined) updatePayload.instagram = patch.instagram
+          if (patch.hours !== undefined) updatePayload.hours = patch.hours
+          if (patch.temporarilyClosed !== undefined) {
+            updatePayload.temporarily_closed = patch.temporarilyClosed
+          }
+          void supabase.from('outlets').update(updatePayload).eq('id', outlet.id).then()
+        }
+        if (patch.soldOut !== undefined) {
+          const overrides = Object.entries(patch.soldOut).map(([itemId, soldOut]) => ({
+            outlet_id: outlet.id,
+            menu_item_id: itemId,
+            sold_out: soldOut,
+          }))
+          if (overrides.length > 0) {
+            void supabase.from('menu_overrides').upsert(overrides).then()
+          }
+        }
+      }
+    }
+  },
 
   resetDemo: () => set(() => ({ ...initState(get().outletSlug) })),
 }))

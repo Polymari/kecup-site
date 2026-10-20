@@ -1,11 +1,14 @@
 import { lazy, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { MessageCircle, ShoppingBag, Smartphone } from 'lucide-react'
 import { TransitionLink } from '@/anim/TransitionLink'
 import { Badge } from '@/components/brand/Badge'
 import { Card } from '@/components/brand/Card'
+import { CheckerBand } from '@/components/brand/CheckerBand'
 import { Drip } from '@/components/brand/Drip'
 import { Marquee } from '@/components/brand/Marquee'
 import { Photo } from '@/components/brand/Photo'
+import { Sparkle } from '@/components/brand/Sparkle'
 import { Sticker } from '@/components/brand/Sticker'
 import { Preloader } from '@/components/home/Preloader'
 import { HeroAssembly } from '@/components/home/HeroAssembly'
@@ -100,28 +103,55 @@ export default function Home() {
 
       <Drip color="var(--color-butter)" />
 
-      <section className="bg-butter/40 px-6 py-16">
+      <section className="bg-butter/30 px-6 py-20">
         <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2">
           <div>
-            <h2 className="font-display text-4xl font-bold text-ink">{t('scroll.end')}</h2>
+            <div className="inline-flex items-center gap-2 rounded-full border-2 border-ink bg-cream px-3 py-1 shadow-sm">
+              <Sparkle className="h-4 w-4 text-sun" />
+              <span className="font-mono text-xs font-bold uppercase tracking-wide text-ink">KeCup Innovation</span>
+            </div>
+            <h2 className="mt-4 font-display text-4xl font-bold text-ink sm:text-5xl">{t('scroll.end')}</h2>
             <p className="mt-4 text-lg text-ink/80">{t('explode.cup')}</p>
             <TransitionLink
               to="/build"
-              className="mt-6 inline-flex rounded-full border-[3px] border-ink bg-ketchup px-6 py-2.5 font-display font-semibold text-cream shadow-sticker"
+              className="mt-6 inline-flex rounded-full border-[3px] border-ink bg-ketchup px-7 py-3 font-display text-lg font-semibold text-cream shadow-sticker transition-transform hover:-translate-y-0.5"
             >
               {t('hero.ctaOrder')}
             </TransitionLink>
           </div>
           <Card className="p-6">
-            <p className="font-script text-3xl text-ketchup">{t('home.oneHand.title')}</p>
-            <ul className="mt-3 space-y-2 text-ink/80">
-              <li>☕ {t('home.oneHand.text')}</li>
-              <li>📱 {t('home.oneHand.scroll')}</li>
-              <li>🎒 {t('home.oneHand.bag')}</li>
-            </ul>
+            <div className="flex items-center justify-between">
+              <p className="font-script text-4xl text-ketchup">{t('home.oneHand.title')}</p>
+              <Sparkle className="h-6 w-6 text-sun" />
+            </div>
+            <p className="mt-2 text-sm text-ink/70">
+              {t('explode.cup')}
+            </p>
+            <div className="mt-6 space-y-3">
+              <div className="flex items-center gap-3 rounded-2xl border-[3px] border-ink bg-cream p-3 shadow-sticker transition-transform hover:-translate-y-0.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-ink bg-butter text-ink">
+                  <Smartphone size={20} />
+                </span>
+                <span className="font-display font-semibold text-ink">{t('home.oneHand.text')}</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-2xl border-[3px] border-ink bg-cream p-3 shadow-sticker transition-transform hover:-translate-y-0.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-ink bg-lime text-ink">
+                  <MessageCircle size={20} />
+                </span>
+                <span className="font-display font-semibold text-ink">{t('home.oneHand.scroll')}</span>
+              </div>
+              <div className="flex items-center gap-3 rounded-2xl border-[3px] border-ink bg-cream p-3 shadow-sticker transition-transform hover:-translate-y-0.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-ink bg-tangerine/30 text-ink">
+                  <ShoppingBag size={20} />
+                </span>
+                <span className="font-display font-semibold text-ink">{t('home.oneHand.bag')}</span>
+              </div>
+            </div>
           </Card>
         </div>
       </section>
+
+      <CheckerBand cell={18} rows={1} />
 
       <section className="mx-auto max-w-6xl px-6 py-16">
         <div className="flex flex-wrap items-end justify-between gap-4">
@@ -140,19 +170,33 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-display text-4xl font-bold text-ink">{t('home.igWall.title')}</h2>
-        <p className="mt-1 text-ink/70">{t('home.igWall.sub')}</p>
-        <div className="mt-6 flex flex-wrap gap-4">
-          {['ig-wall', 'ig-wall', 'ig-wall', 'ig-wall'].map((key, index) => (
-            <div
-              key={index}
-              className="w-40 border-[3px] border-ink bg-cream p-2 shadow-sticker"
-              style={{ transform: `rotate(${index % 2 === 0 ? -2 : 2}deg)` }}
-            >
-              <Photo photoKey={key} className="border-0" />
+      <section className="border-t-[3px] border-ink bg-cream-deep/60 px-6 py-20">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <h2 className="font-display text-4xl font-bold text-ink">{t('home.igWall.title')}</h2>
+              <p className="mt-1 text-ink/70">{t('home.igWall.sub')}</p>
             </div>
-          ))}
+            <span className="font-mono text-xs font-bold uppercase tracking-wider text-brick">#KeepCravings</span>
+          </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-6 sm:justify-start">
+            {[
+              { key: 'menu-print-2', rot: -3, caption: '#KeCupMenu' },
+              { key: 'combo-bolo', rot: 2, caption: 'Bolo Craving Cup' },
+              { key: 'logo', rot: -2, caption: 'Sealed with a kecup' },
+              { key: 'combo-cheese', rot: 3, caption: 'Cheesy Goodness' },
+              { key: 'menu-print-1', rot: -1, caption: 'Build Your Own' },
+            ].map((item, index) => (
+              <div
+                key={index}
+                className="w-48 cursor-pointer rounded-xl border-[3px] border-ink bg-cream p-2.5 pb-4 shadow-sticker transition-all duration-300 hover:z-20 hover:scale-105 hover:rotate-0"
+                style={{ transform: `rotate(${item.rot}deg)` }}
+              >
+                <Photo photoKey={item.key} className="border-0" imgClassName="aspect-[4/5] rounded-lg" />
+                <p className="mt-2 text-center font-script text-xl text-ketchup">{item.caption}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

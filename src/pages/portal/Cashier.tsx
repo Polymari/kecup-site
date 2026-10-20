@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MENU_ITEMS, MENU_BY_ID } from '@/data/menu'
+import { STOCK_BY_ID } from '@/data/stock'
 import type { DrinkKey, OrderLine } from '@/data/types'
 import { expandRequirements } from '@/lib/recipes'
 import { formatRupiah } from '@/lib/money'
@@ -112,7 +113,7 @@ export default function Cashier() {
                           onClick={() => addLine(item.id, drink)}
                           className="flex-1 rounded-full border-2 border-ink bg-cream px-1 py-1 text-[10px] font-bold text-ink disabled:cursor-not-allowed"
                         >
-                          {drink === 'tea-cloudy' ? 'Cloudy' : 'Fizzy'}
+                          {drink === 'tea-cloudy' ? t('portal.cashier.cloudy') : t('portal.cashier.fizzy')}
                         </button>
                       ))}
                     </div>
@@ -152,7 +153,7 @@ export default function Cashier() {
                     type="button"
                     aria-label={t('common.remove')}
                     onClick={() => setQty(index, line.qty - 1)}
-                    className="h-6 w-6 rounded-full border-2 border-ink bg-cream font-bold"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-ink bg-cream font-bold"
                   >
                     −
                   </button>
@@ -161,7 +162,7 @@ export default function Cashier() {
                     type="button"
                     aria-label={t('common.add')}
                     onClick={() => setQty(index, line.qty + 1)}
-                    className="h-6 w-6 rounded-full border-2 border-ink bg-cream font-bold"
+                    className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-ink bg-cream font-bold"
                   >
                     +
                   </button>
@@ -179,7 +180,12 @@ export default function Cashier() {
                 {t('portal.inventory.onHand')} →
               </p>
               <p className="font-mono text-[11px] text-ink">
-                {deduction.map((req) => `-${req.qty} ${req.stockItemId}`).join(' · ')}
+                {deduction
+                  .map(
+                    (req) =>
+                      `-${req.qty} ${t(STOCK_BY_ID[req.stockItemId]?.nameKey ?? req.stockItemId)}`,
+                  )
+                  .join(' · ')}
               </p>
             </div>
           ) : null}

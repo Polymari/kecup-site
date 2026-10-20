@@ -165,6 +165,24 @@ describe('portal store — costing what-if', () => {
     expect(after.qty).toBe(before.qty)
   })
 
+  it('switches outlets and initializes store state for target outlet', () => {
+    usePortal.getState().setOutlet('blok-m')
+    expect(usePortal.getState().outletSlug).toBe('blok-m')
+    expect(usePortal.getState().stock.length).toBeGreaterThan(0)
+    usePortal.getState().setOutlet('anggrek')
+    expect(usePortal.getState().outletSlug).toBe('anggrek')
+  })
+
+  it('updates outlet settings cleanly', () => {
+    usePortal.getState().updateSettings('anggrek', {
+      whatsapp: '6289999999999',
+      temporarilyClosed: true,
+    })
+    expect(usePortal.getState().settings.anggrek.whatsapp).toBe('6289999999999')
+    expect(usePortal.getState().settings.anggrek.temporarilyClosed).toBe(true)
+    usePortal.getState().updateSettings('anggrek', { temporarilyClosed: false })
+  })
+
   it('ignores invalid unit costs', () => {
     usePortal.getState().setUnitCost('chips', -5)
     usePortal.getState().setUnitCost('chips', Number.NaN)

@@ -58,6 +58,7 @@
       "drinks": "Minuman"
     },
     "addToCup": "Tambah ke cup",
+    "added": "Ditambahkan!",
     "soldOut": "Habis",
     "viewPrinted": "Lihat menu cetak",
     "selectOutlet": "Pesan dari",
@@ -136,6 +137,23 @@
     "title": "Setiap lingkungan layak punya KeCup",
     "sub": "Miliki gerobak, kios, atau kafe KeCup.",
     "calcTitle": "Perkirakan pendapatanmu",
+    "faqTitle": "Tanya Jawab (FAQ)",
+    "spaceLabel": "Ruang",
+    "staffLabel": "Staf",
+    "faq": [
+      {
+        "q": "Berapa lama proses persiapannya?",
+        "a": "Dari tanda tangan sampai cup pertama: sekitar dua minggu untuk gerobak, empat minggu untuk kafe."
+      },
+      {
+        "q": "Apakah butuh pengalaman F&B sebelumnya?",
+        "a": "Tidak perlu — pelatihan mencakup resep, alur kasir, dan manajemen stok."
+      },
+      {
+        "q": "Bisa pilih lokasi sendiri?",
+        "a": "Bisa. Kami bantu analisis keramaian lalu lintas, lalu sesuaikan format gerai yang pas."
+      }
+    ],
     "disclaimer": "Hanya ilustrasi, berdasarkan biaya resep KeCup — bukan jaminan pendapatan.",
     "apply": "Daftar sekarang",
     "pickPackage": "Pilih ukuran ini",
@@ -287,7 +305,8 @@
       "sales": "Penjualan",
       "analytics": "Analitik",
       "settings": "Pengaturan",
-      "logout": "Keluar"
+      "logout": "Keluar",
+      "outlet": "Outlet"
     },
     "dashboard": {
       "greeting": "Selamat datang kembali",
@@ -310,12 +329,27 @@
       "success": "Penjualan tercatat",
       "insufficientStock": "Stok tidak cukup untuk menyelesaikan penjualan ini",
       "cartEmpty": "Tambah item untuk mulai penjualan",
-      "tendered": "Uang diterima"
+      "tendered": "Uang diterima",
+      "cloudy": "Cloudy",
+      "fizzy": "Fizzy"
     },
     "inventory": {
       "title": "Inventaris",
       "item": "Item",
       "category": "Kategori",
+      "categories": {
+        "food": "Makanan",
+        "drink": "Minuman",
+        "packaging": "Kemasan"
+      },
+      "kinds": {
+        "sale": "Penjualan",
+        "restock": "Restok",
+        "adjustment": "Penyesuaian",
+        "waste": "Terbuang",
+        "void": "Batal",
+        "seed": "Awal"
+      },
       "onHand": "Tersedia",
       "threshold": "Batas minimum",
       "unitCost": "Biaya unit",
@@ -368,7 +402,8 @@
       "hours": "Jam buka",
       "soldOut": "Habis hari ini",
       "tempClosed": "Sementara tutup",
-      "saved": "Tersimpan — langsung tayang di situs publik"
+      "saved": "Tersimpan — langsung tayang di situs publik",
+      "invalidHours": "Waktu tutup harus lebih lambat dari waktu buka"
     }
   },
   "home": {

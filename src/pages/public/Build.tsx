@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { DrinkKey, FlavorKey } from '@/data/types'
 import { MENU_BY_ID } from '@/data/menu'
+import { formatK } from '@/lib/money'
+import { Badge } from '@/components/brand/Badge'
 import { cn } from '@/lib/cn'
 import { orderCode } from '@/lib/whatsapp'
 import { CupStage } from '@/components/build/CupStage'
@@ -54,6 +56,19 @@ export default function Build() {
   const outlets = useOutlets()
   const outlet = outlets.find((entry) => entry.slug === slug) ?? outlets[0]
   const availability = useAvailability(outlet.slug)
+
+  const currentPrice = useMemo(() => {
+    if (!flavor || !drink) return null
+    if (asCombo) {
+      const combo = MENU_BY_ID[`combo-${flavor}`]
+      const savings = combo?.comparePrice ? combo.comparePrice - combo.price : 0
+      return { price: (combo?.price ?? 0) * qty, savings: savings * qty }
+    } else {
+      const snackPrice = MENU_BY_ID[`nachos-${flavor}`]?.price ?? 0
+      const drinkPrice = MENU_BY_ID[drink]?.price ?? 0
+      return { price: (snackPrice + drinkPrice) * qty, savings: 0 }
+    }
+  }, [flavor, drink, asCombo, qty])
 
   const addCustomCup = () => {
     if (!flavor || !drink) return
@@ -199,14 +214,23 @@ export default function Build() {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  disabled={!flavor || !drink}
-                  onClick={addCustomCup}
-                  className="rounded-full border-[3px] border-ink bg-butter px-6 py-2.5 font-display text-lg font-semibold text-ink shadow-sticker transition-transform hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
-                >
-                  {t('menu.addToCup')}
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={!flavor || !drink}
+                    onClick={addCustomCup}
+                    aria-label={t('menu.addToCup')}
+                    className="rounded-full border-[3px] border-ink bg-butter px-6 py-2.5 font-display text-lg font-semibold text-ink shadow-sticker transition-transform hover:-translate-y-0.5 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    <span>{t('menu.addToCup')}</span>
+                    {currentPrice ? <span aria-hidden> · {formatK(currentPrice.price)}</span> : null}
+                  </button>
+                  {currentPrice && currentPrice.savings > 0 ? (
+                    <Badge tone="ketchup">
+                      {t('menu.compare')} {formatK(currentPrice.savings)}
+                    </Badge>
+                  ) : null}
+                </div>
               </div>
 
               {flavor && drink ? (

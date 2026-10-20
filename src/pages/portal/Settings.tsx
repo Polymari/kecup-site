@@ -19,7 +19,13 @@ export default function Settings() {
 
   if (!settings) return null
 
+  const hasInvalidHours = DAY_KEYS.some((day) => {
+    const entry = settings.hours[day]
+    return !entry.closed && Boolean(entry.open && entry.close && entry.close <= entry.open)
+  })
+
   const markSaved = () => {
+    if (hasInvalidHours) return
     setSaved(true)
     window.setTimeout(() => setSaved(false), 2000)
   }
@@ -28,7 +34,11 @@ export default function Settings() {
     <section>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-3xl font-bold text-ink">{t('portal.settings.title')}</h1>
-        {saved ? <Badge tone="lime">{t('portal.settings.saved')}</Badge> : null}
+        {hasInvalidHours ? (
+          <Badge tone="ketchup">{t('portal.settings.invalidHours')}</Badge>
+        ) : saved ? (
+          <Badge tone="lime">{t('portal.settings.saved')}</Badge>
+        ) : null}
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -123,58 +133,72 @@ export default function Settings() {
 
       <Card className="mt-4 p-4">
         <h2 className="font-display text-xl font-semibold text-ink">{t('portal.settings.hours')}</h2>
-        <div className="mt-3 grid gap-2">
+        <div className="mt-3 grid gap-3">
           {DAY_KEYS.map((day: DayKey) => {
             const entry = settings.hours[day]
+            const isInvalid = !entry.closed && Boolean(entry.open && entry.close && entry.close <= entry.open)
             return (
-              <div key={day} className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="w-12 font-semibold text-ink">{t(`days.${day}`)}</span>
-                <input
-                  type="time"
-                  value={entry.open}
-                  disabled={entry.closed}
-                  onChange={(event) => {
-                    updateSettings(outletSlug, {
-                      hours: { ...settings.hours, [day]: { ...entry, open: event.target.value } },
-                    })
-                    markSaved()
-                  }}
-                  className="rounded-full border-2 border-ink bg-cream px-3 py-1 font-mono text-xs disabled:opacity-40"
-                />
-                <span className="text-brick">–</span>
-                <input
-                  type="time"
-                  value={entry.close}
-                  disabled={entry.closed}
-                  onChange={(event) => {
-                    updateSettings(outletSlug, {
-                      hours: { ...settings.hours, [day]: { ...entry, close: event.target.value } },
-                    })
-                    markSaved()
-                  }}
-                  className="rounded-full border-2 border-ink bg-cream px-3 py-1 font-mono text-xs disabled:opacity-40"
-                />
-                <label className="ml-2 flex items-center gap-1.5 text-xs text-ink">
+              <div key={day} className="flex flex-col gap-1">
+                <div className="flex flex-wrap items-center gap-2 text-sm">
+                  <span className="w-12 font-semibold text-ink">{t(`days.${day}`)}</span>
                   <input
-                    type="checkbox"
-                    checked={Boolean(entry.closed)}
+                    type="time"
+                    value={entry.open}
+                    disabled={entry.closed}
                     onChange={(event) => {
                       updateSettings(outletSlug, {
-                        hours: {
-                          ...settings.hours,
-                          [day]: {
-                            ...entry,
-                            closed: event.target.checked,
-                            open: entry.open || '10:00',
-                            close: entry.close || '20:00',
-                          },
-                        },
+                        hours: { ...settings.hours, [day]: { ...entry, open: event.target.value } },
                       })
                       markSaved()
                     }}
+                    className={cn(
+                      'rounded-full border-2 border-ink bg-cream px-3 py-1 font-mono text-xs disabled:opacity-40',
+                      isInvalid && 'border-ketchup bg-ketchup/10 text-ketchup font-bold',
+                    )}
                   />
-                  {t('status.closed')}
-                </label>
+                  <span className="text-brick">–</span>
+                  <input
+                    type="time"
+                    value={entry.close}
+                    disabled={entry.closed}
+                    onChange={(event) => {
+                      updateSettings(outletSlug, {
+                        hours: { ...settings.hours, [day]: { ...entry, close: event.target.value } },
+                      })
+                      markSaved()
+                    }}
+                    className={cn(
+                      'rounded-full border-2 border-ink bg-cream px-3 py-1 font-mono text-xs disabled:opacity-40',
+                      isInvalid && 'border-ketchup bg-ketchup/10 text-ketchup font-bold',
+                    )}
+                  />
+                  <label className="ml-2 flex items-center gap-1.5 text-xs text-ink">
+                    <input
+                      type="checkbox"
+                      checked={Boolean(entry.closed)}
+                      onChange={(event) => {
+                        updateSettings(outletSlug, {
+                          hours: {
+                            ...settings.hours,
+                            [day]: {
+                              ...entry,
+                              closed: event.target.checked,
+                              open: entry.open || '10:00',
+                              close: entry.close || '20:00',
+                            },
+                          },
+                        })
+                        markSaved()
+                      }}
+                    />
+                    {t('status.closed')}
+                  </label>
+                </div>
+                {isInvalid ? (
+                  <p className="ml-14 text-xs font-semibold text-ketchup" role="alert">
+                    {t('portal.settings.invalidHours')}
+                  </p>
+                ) : null}
               </div>
             )
           })}

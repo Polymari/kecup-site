@@ -63,7 +63,7 @@ export function CartPanel({
                     type="button"
                     aria-label={`${t('common.remove')} ${t(item.nameKey)}`}
                     onClick={() => onQtyChange(line.lineId, line.qty - 1)}
-                    className="h-7 w-7 rounded-full border-2 border-ink bg-cream font-bold text-ink"
+                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-cream font-bold text-ink transition-transform active:scale-95"
                   >
                     −
                   </button>
@@ -72,7 +72,7 @@ export function CartPanel({
                     type="button"
                     aria-label={`${t('common.add')} ${t(item.nameKey)}`}
                     onClick={() => onQtyChange(line.lineId, line.qty + 1)}
-                    className="h-7 w-7 rounded-full border-2 border-ink bg-cream font-bold text-ink"
+                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-ink bg-cream font-bold text-ink transition-transform active:scale-95"
                   >
                     +
                   </button>

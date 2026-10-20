@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
   BarChart3,
   Boxes,
+  ChevronDown,
   LayoutDashboard,
   LogOut,
   Receipt,
@@ -11,7 +12,9 @@ import {
 } from 'lucide-react'
 import { CheckerBand } from '@/components/brand/CheckerBand'
 import { Wordmark } from '@/components/brand/Wordmark'
+import { OUTLETS } from '@/data/outlets'
 import { useAuth } from '@/lib/auth'
+import { usePortal } from '@/store/portal'
 
 const NAV_ITEMS = [
   { to: '/portal/dashboard', key: 'portal.nav.dashboard', icon: LayoutDashboard },
@@ -26,6 +29,8 @@ export function PortalLayout() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { signOut } = useAuth()
+  const outletSlug = usePortal((state) => state.outletSlug)
+  const setOutlet = usePortal((state) => state.setOutlet)
 
   return (
     <div className="flex min-h-dvh bg-cream">
@@ -34,7 +39,29 @@ export function PortalLayout() {
           <Wordmark className="h-9 w-auto" />
         </div>
         <CheckerBand cell={14} rows={1} />
-        <nav aria-label="Portal" className="flex-1 px-3 py-4">
+        <div className="px-3 pt-3">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-ink/70">
+            {t('portal.nav.outlet')}
+          </label>
+          <div className="relative mt-1">
+            <select
+              value={outletSlug}
+              onChange={(event) => setOutlet(event.target.value)}
+              aria-label={t('portal.nav.outlet')}
+              className="w-full appearance-none rounded-xl border-2 border-ink bg-cream px-3 py-1.5 pr-8 font-display text-xs font-bold text-ink shadow-sticker focus:outline-none focus:ring-2 focus:ring-butter"
+            >
+              {OUTLETS.map((outlet) => (
+                <option key={outlet.slug} value={outlet.slug}>
+                  {outlet.name.replace('KeCup ', '')}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-ink">
+              <ChevronDown size={14} />
+            </div>
+          </div>
+        </div>
+        <nav aria-label="Portal" className="flex-1 px-3 py-3">
           <ul className="space-y-1">
             {NAV_ITEMS.map(({ to, key, icon: Icon }) => (
               <li key={to}>
@@ -69,6 +96,41 @@ export function PortalLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex items-center justify-between border-b-[3px] border-ink bg-cream-deep px-3 py-2 md:hidden">
+          <div className="flex items-center gap-2">
+            <Wordmark className="h-6 w-auto" />
+            <div className="relative">
+              <select
+                value={outletSlug}
+                onChange={(event) => setOutlet(event.target.value)}
+                aria-label={t('portal.nav.outlet')}
+                className="appearance-none rounded-lg border-2 border-ink bg-cream px-2 py-1 pr-6 font-display text-xs font-bold text-ink"
+              >
+                {OUTLETS.map((outlet) => (
+                  <option key={outlet.slug} value={outlet.slug}>
+                    {outlet.name.replace('KeCup ', '')}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-1.5 flex items-center text-ink">
+                <ChevronDown size={12} />
+              </div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              await signOut()
+              navigate('/portal/login')
+            }}
+            aria-label={t('portal.nav.logout')}
+            className="flex items-center gap-1 rounded-lg border-2 border-ink bg-cream px-2.5 py-1 font-display text-xs font-semibold text-ink shadow-sticker"
+          >
+            <LogOut size={13} aria-hidden />
+            <span>{t('portal.nav.logout')}</span>
+          </button>
+        </header>
+
         <nav
           aria-label="Portal"
           className="flex gap-1 overflow-x-auto border-b-[3px] border-ink bg-cream-deep px-2 py-2 md:hidden"

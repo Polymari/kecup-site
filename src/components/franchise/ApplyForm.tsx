@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -39,12 +39,17 @@ export function ApplyForm({ defaultPackage = 'regular' }: ApplyFormProps) {
     handleSubmit,
     trigger,
     getValues,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: { packageId: defaultPackage, message: '' },
     mode: 'onTouched',
   })
+
+  useEffect(() => {
+    setValue('packageId', defaultPackage)
+  }, [defaultPackage, setValue])
 
   const locale = i18n.language.startsWith('id') ? 'id' : 'en'
 

@@ -82,7 +82,7 @@ export function Preloader({ onComplete }: PreloaderProps) {
         />
       </svg>
 
-      <p className="font-mono text-xs uppercase tracking-widest text-brick">{progress}%</p>
+      <p className="font-mono text-xs uppercase tracking-widest text-brick">{Math.round(progress)}%</p>
 
       <style>{`@keyframes preloader-bounce { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-10px) } }`}</style>
     </div>

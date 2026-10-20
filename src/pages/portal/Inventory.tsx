@@ -66,7 +66,9 @@ export default function Inventory() {
                   <td className="py-2 pr-3 font-semibold text-ink">
                     {t(STOCK_BY_ID[row.stockItemId].nameKey)}
                   </td>
-                  <td className="py-2 pr-3 text-ink/70">{STOCK_BY_ID[row.stockItemId].category}</td>
+                  <td className="py-2 pr-3 text-ink/70">
+                    {t(`portal.inventory.categories.${STOCK_BY_ID[row.stockItemId].category}`)}
+                  </td>
                   <td className="py-2 pr-3 font-mono">{row.qty}</td>
                   <td className="py-2 pr-3 font-mono text-ink/70">{row.lowThreshold}</td>
                   <td className="py-2 pr-3 font-mono">{formatRupiahExact(row.unitCost)}</td>
@@ -171,7 +173,9 @@ export default function Inventory() {
                 <span className="w-24 shrink-0 text-brick">
                   {dateKey(new Date(movement.createdAt))}
                 </span>
-                <Badge tone={movement.delta < 0 ? 'ketchup' : 'lime'}>{movement.kind}</Badge>
+                <Badge tone={movement.delta < 0 ? 'ketchup' : 'lime'}>
+                  {t(`portal.inventory.kinds.${movement.kind}`, movement.kind)}
+                </Badge>
                 <span className="min-w-0 flex-1 truncate text-ink">
                   {t(STOCK_BY_ID[movement.stockItemId]?.nameKey ?? movement.stockItemId)}
                 </span>

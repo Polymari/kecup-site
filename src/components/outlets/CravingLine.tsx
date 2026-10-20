@@ -131,8 +131,18 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
             <g
               key={outlet.slug}
               transform={`translate(${point.x}, ${point.y})`}
-              className="cursor-pointer"
+              className="cursor-pointer focus:outline-none"
+              role="button"
+              tabIndex={0}
+              aria-label={`${outlet.name} — ${status.open ? t('outlets.open') : t('outlets.closed')}`}
+              aria-pressed={selected}
               onClick={() => onSelect(outlet.slug)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault()
+                  onSelect(outlet.slug)
+                }
+              }}
             >
               <circle
                 r={selected ? 18 : 13}

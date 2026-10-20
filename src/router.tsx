@@ -5,13 +5,13 @@ import { RequireAuth } from './lib/auth'
 import { PublicLayout } from './components/layout/PublicLayout'
 import { PortalLayout } from './components/layout/PortalLayout'
 import Home from './pages/public/Home'
-import Menu from './pages/public/Menu'
-import Build from './pages/public/Build'
-import Outlets from './pages/public/Outlets'
-import OutletDetail from './pages/public/OutletDetail'
-import Franchise from './pages/public/Franchise'
 import NotFound from './pages/public/NotFound'
 
+const Menu = lazy(() => import('./pages/public/Menu'))
+const Build = lazy(() => import('./pages/public/Build'))
+const Outlets = lazy(() => import('./pages/public/Outlets'))
+const OutletDetail = lazy(() => import('./pages/public/OutletDetail'))
+const Franchise = lazy(() => import('./pages/public/Franchise'))
 const CupLab = lazy(() => import('./pages/lab/CupLab'))
 const BrandLab = lazy(() => import('./pages/lab/BrandLab'))
 const Login = lazy(() => import('./pages/portal/Login'))

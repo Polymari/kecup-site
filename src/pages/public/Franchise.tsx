@@ -9,24 +9,10 @@ import { Sticker } from '@/components/brand/Sticker'
 import { EarningsCalculator } from '@/components/franchise/EarningsCalculator'
 import { ApplyForm } from '@/components/franchise/ApplyForm'
 
-const FAQ = [
-  {
-    q: 'How long does setup take?',
-    a: 'From signing to first cup: about two weeks for a cart, four for a café.',
-  },
-  {
-    q: 'Do I need F&B experience?',
-    a: 'No — training covers recipes, cashier flow, and stock management.',
-  },
-  {
-    q: 'Can I choose my own location?',
-    a: 'Yes. We help assess foot traffic, then build the outlet format around it.',
-  },
-]
-
 export default function Franchise() {
   const { t } = useTranslation()
   const [selectedPackage, setSelectedPackage] = useState<'regular' | 'large' | 'jumbo'>('regular')
+  const faqItems = (t('franchise.faq', { returnObjects: true }) ?? []) as Array<{ q: string; a: string }>
 
   return (
     <section className="mx-auto max-w-6xl px-6 py-12">
@@ -52,11 +38,11 @@ export default function Franchise() {
               </p>
               <dl className="mt-3 space-y-1 text-sm text-ink/80">
                 <div className="flex justify-between gap-2">
-                  <dt>Space</dt>
+                  <dt>{t('franchise.spaceLabel')}</dt>
                   <dd>{t(pkg.spaceKey)}</dd>
                 </div>
                 <div className="flex justify-between gap-2">
-                  <dt>Staff</dt>
+                  <dt>{t('franchise.staffLabel')}</dt>
                   <dd>{t(pkg.staffKey)}</dd>
                 </div>
               </dl>
@@ -82,9 +68,9 @@ export default function Franchise() {
 
       <div className="mt-12 grid gap-6 md:grid-cols-2">
         <div>
-          <h2 className="font-display text-2xl font-semibold text-ink">FAQ</h2>
+          <h2 className="font-display text-2xl font-semibold text-ink">{t('franchise.faqTitle')}</h2>
           <Accordion.Root type="single" collapsible className="mt-4">
-            {FAQ.map((entry) => (
+            {faqItems.map((entry) => (
               <Accordion.Item
                 key={entry.q}
                 value={entry.q}

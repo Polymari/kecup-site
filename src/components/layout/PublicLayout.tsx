@@ -1,6 +1,7 @@
 import { Suspense, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { useTranslation } from 'react-i18next'
+import { useLenis } from 'lenis/react'
 import { SmoothScroll } from '@/anim/lenis'
 import { TransitionProvider } from '@/anim/TransitionLink'
 import { ScrollTrigger } from '@/anim/gsap'
@@ -9,17 +10,25 @@ import { PublicNav } from './PublicNav'
 import { PublicFooter } from './PublicFooter'
 import { GrainOverlay } from '@/components/brand/GrainOverlay'
 
-export function PublicLayout() {
-  const { t } = useTranslation()
+function ScrollReset() {
   const location = useLocation()
+  const lenis = useLenis()
 
   useEffect(() => {
     window.scrollTo(0, 0)
+    lenis?.scrollTo(0, { immediate: true })
     ScrollTrigger.refresh()
-  }, [location.pathname])
+  }, [location.pathname, lenis])
+
+  return null
+}
+
+export function PublicLayout() {
+  const { t } = useTranslation()
 
   return (
     <SmoothScroll>
+      <ScrollReset />
       <TransitionProvider>
         <a
           href="#main"
