@@ -7,12 +7,19 @@ import { Card } from '@/components/brand/Card'
 import { Photo } from '@/components/brand/Photo'
 import { PriceTag } from '@/components/brand/PriceTag'
 import { Sticker } from '@/components/brand/Sticker'
+import { MENU_ITEMS } from '@/data/menu'
 import { useCart } from '@/store/cart'
 
 type MenuItemCardProps = {
   item: MenuItem
   available: boolean
 }
+
+// One badge, one meaning: only the combo with the largest saving earns it.
+const BEST_VALUE_ID = MENU_ITEMS.filter((item) => item.kind === 'combo').reduce(
+  (best, item) =>
+    (item.comparePrice ?? 0) - item.price > (best.comparePrice ?? 0) - best.price ? item : best,
+).id
 
 export function MenuItemCard({ item, available }: MenuItemCardProps) {
   const { t } = useTranslation()
@@ -24,7 +31,7 @@ export function MenuItemCard({ item, available }: MenuItemCardProps) {
       as="article"
       className="relative flex flex-col p-4 transition-transform duration-200 hover:-rotate-1 hover:scale-[1.015]"
     >
-      {item.kind === 'combo' ? (
+      {item.id === BEST_VALUE_ID ? (
         <div className="absolute -right-2 -top-3 z-10">
           <Sticker tone="lime">{t('combo.bestValue')}</Sticker>
         </div>

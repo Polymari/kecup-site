@@ -5,7 +5,7 @@ import { MENU_BY_ID } from '@/data/menu'
 import { STOCK_BY_ID } from '@/data/stock'
 import { byDay, summarize } from '@/lib/analytics'
 import { dateKey, dateKeyToUtc } from '@/lib/wib'
-import { formatRupiah } from '@/lib/money'
+import { formatCompact, formatRupiah } from '@/lib/money'
 import { isOpenNow } from '@/lib/hours'
 import { Badge } from '@/components/brand/Badge'
 import { Card } from '@/components/brand/Card'
@@ -97,7 +97,7 @@ export default function Dashboard() {
                   </linearGradient>
                 </defs>
                 <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} width={70} tickFormatter={(v) => `${v / 1000}k`} />
+                <YAxis tick={{ fontSize: 11 }} width={70} tickFormatter={(v) => formatCompact(Number(v))} />
                 <Tooltip formatter={(value) => formatRupiah(Number(value))} />
                 <Area
                   type="monotone"

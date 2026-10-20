@@ -209,13 +209,12 @@ export default function Build() {
                 </button>
               </div>
 
-              <p className="text-sm text-ink/70">
-                {flavor && drink
-                  ? `${t('flavors.title')}: ${t(MENU_BY_ID[`combo-${flavor}`].nameKey)} · ${t(
-                      MENU_BY_ID[drink].nameKey,
-                    )}`
-                  : t('build.empty')}
-              </p>
+              {flavor && drink ? (
+                <p className="text-sm text-ink/70">
+                  {t('flavors.title')}: {t(MENU_BY_ID[`combo-${flavor}`].nameKey)} ·{' '}
+                  {t(MENU_BY_ID[drink].nameKey)}
+                </p>
+              ) : null}
             </div>
 
             <CupStage flavor={flavor} drink={drink} />

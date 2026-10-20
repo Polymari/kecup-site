@@ -96,6 +96,25 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
           strokeWidth={10}
           strokeLinecap="round"
         />
+        <g ref={trainRef} transform="translate(40, 110)">
+          {/* A tiny cup rides the line; it slips under station dots at each stop. */}
+          <line
+            x1={3}
+            y1={-15}
+            x2={2}
+            y2={-6}
+            stroke="var(--color-ink)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+          />
+          <path
+            d="M -7 -8 L 7 -8 L 4.6 8 L -4.6 8 Z"
+            fill="var(--color-sun)"
+            stroke="var(--color-ink)"
+            strokeWidth={2.5}
+            strokeLinejoin="round"
+          />
+        </g>
         {stations.map((point, index) => {
           const outlet = outlets[index]
           const status = isOpenNow(outlet, new Date())
@@ -105,6 +124,9 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
           const last = index === stations.length - 1
           const anchor = first ? 'start' : last ? 'end' : 'middle'
           const labelX = first ? -16 : last ? 16 : 0
+          // Put labels on the outside of the curve so they never graze the line:
+          // crest stations label below, valley stations label above.
+          const labelY = point.y < VIEW_HEIGHT / 2 ? 38 : -26
           return (
             <g
               key={outlet.slug}
@@ -120,7 +142,7 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
               />
               <text
                 x={labelX}
-                y={38}
+                y={labelY}
                 textAnchor={anchor}
                 fill="var(--color-ink)"
                 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}
@@ -130,10 +152,6 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
             </g>
           )
         })}
-        <g ref={trainRef} transform="translate(40, 110)">
-          <circle r={9} fill="var(--color-sun)" stroke="var(--color-ink)" strokeWidth={4} />
-          <circle r={3} fill="var(--color-ketchup)" />
-        </g>
       </svg>
     </div>
   )

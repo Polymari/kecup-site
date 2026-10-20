@@ -177,9 +177,12 @@ export function HeroAssembly({ ready }: { ready: boolean }) {
               ref={(node) => {
                 calloutRefs.current[index] = node
               }}
-              className="opacity-0"
+              className="flex items-center justify-end gap-2 opacity-0"
               style={{ transform: 'translateX(30px)' }}
             >
+              {/* Leader rule: turns the floating card into part of the exploded diagram. */}
+              <span aria-hidden className="h-1.5 w-1.5 shrink-0 rounded-full bg-ink/50" />
+              <span aria-hidden className="h-px w-12 shrink-0 border-t-2 border-dashed border-ink/35" />
               <span className="block max-w-[220px] rounded-xl border-[3px] border-ink bg-cream/95 px-3 py-2 font-display text-sm font-semibold text-ink shadow-sticker">
                 {t(key)}
               </span>

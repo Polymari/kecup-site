@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatK, formatRupiah, formatRupiahExact } from './money'
+import { formatCompact, formatK, formatRupiah, formatRupiahExact } from './money'
 
 describe('formatRupiah', () => {
   it('formats integer rupiah with dot grouping', () => {
@@ -23,6 +23,15 @@ describe('formatRupiahExact', () => {
   it('keeps decimals for cost figures', () => {
     expect(formatRupiahExact(2908.333)).toBe('Rp 2.908,33')
     expect(formatRupiahExact(240)).toBe('Rp 240')
+  })
+})
+
+describe('formatCompact', () => {
+  it('uses Indonesian short scale for chart axes', () => {
+    expect(formatCompact(700000)).toBe('700\u00a0rb')
+    expect(formatCompact(1400000)).toBe('1,4\u00a0jt')
+    expect(formatCompact(2800000)).toBe('2,8\u00a0jt')
+    expect(formatCompact(0)).toBe('0')
   })
 })
 

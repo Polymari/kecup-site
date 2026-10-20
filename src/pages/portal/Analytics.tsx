@@ -32,7 +32,7 @@ import {
 } from '@/lib/analytics'
 import { DAY_KEYS, dateKey } from '@/lib/wib'
 import { computeCogs } from '@/lib/recipes'
-import { formatRupiah, formatRupiahExact } from '@/lib/money'
+import { formatCompact, formatRupiah, formatRupiahExact } from '@/lib/money'
 import { pricingInsight } from '@/lib/pricing'
 import { Badge } from '@/components/brand/Badge'
 import { Card } from '@/components/brand/Card'
@@ -132,7 +132,7 @@ export default function Analytics() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(74,21,18,0.15)" />
               <XAxis dataKey="day" tick={{ fontSize: 10 }} interval={Math.floor(daily.length / 8)} />
-              <YAxis tick={{ fontSize: 10 }} width={70} tickFormatter={(v) => `${v / 1000}k`} />
+              <YAxis tick={{ fontSize: 10 }} width={70} tickFormatter={(v) => formatCompact(Number(v))} />
               <Tooltip formatter={(value) => formatRupiah(Number(value))} />
               <Legend />
               <Area type="monotone" dataKey="revenue" stroke="var(--color-ketchup)" strokeWidth={2} fill="rgba(226,59,46,0.12)" />
@@ -151,7 +151,7 @@ export default function Analytics() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={top} layout="vertical" margin={{ left: 8, right: 16 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(74,21,18,0.15)" horizontal={false} />
-                <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v / 1000}k`} />
+                <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => formatCompact(Number(v))} />
                 <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={150} />
                 <Tooltip formatter={(value) => formatRupiah(Number(value))} />
                 <Bar dataKey="revenue" fill="var(--color-ketchup)" radius={[0, 6, 6, 0]} />

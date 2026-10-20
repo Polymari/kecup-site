@@ -13,6 +13,16 @@ export function formatRupiahExact(amount: number): string {
   return `Rp ${normalizeGrouping(decimalFormatter.format(amount))}`
 }
 
+const compactFormatter = new Intl.NumberFormat('id-ID', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+})
+
+/** Axis-friendly short form: 700 rb, 1,4 jt, 2,8 jt. */
+export function formatCompact(amount: number): string {
+  return compactFormatter.format(amount)
+}
+
 export function formatK(amount: number): string {
   const thousands = amount / 1000
   if (Number.isInteger(thousands)) return `${thousands}k`
