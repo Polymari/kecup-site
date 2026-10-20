@@ -50,6 +50,8 @@ interface PortalState {
   voidSale: (saleId: string, reason: string) => SaleOutcome
   restock: (stockItemId: string, qty: number, unitCost?: number, note?: string) => void
   adjust: (stockItemId: string, delta: number, kind: 'adjustment' | 'waste', note?: string) => void
+  /** Direct unit-cost edit (costing what-if). Mirrors the allowed column grant on outlet_stock. */
+  setUnitCost: (stockItemId: string, unitCost: number) => void
   updateSettings: (slug: string, patch: Partial<OutletSettings>) => void
   resetDemo: () => void
 }
@@ -245,6 +247,15 @@ export const usePortal = create<PortalState>()((set, get) => ({
         ...state.movements,
       ],
     })
+  },
+
+  setUnitCost: (stockItemId, unitCost) => {
+    if (!Number.isFinite(unitCost) || unitCost < 0) return
+    set((state) => ({
+      stock: state.stock.map((row) =>
+        row.stockItemId === stockItemId ? { ...row, unitCost } : row,
+      ),
+    }))
   },
 
   updateSettings: (slug, patch) =>

@@ -50,3 +50,11 @@ export function addDaysToKey(key: string, days: number): string {
   const base = dateKeyToUtc(key)
   return dateKey(new Date(base.getTime() + days * 24 * 60 * 60 * 1000))
 }
+
+/** "YYYY-MM-DD HH:MM" in Asia/Jakarta, regardless of the viewer's timezone. */
+export function formatWibDateTime(date: Date | string): string {
+  const parts = wibParts(typeof date === 'string' ? new Date(date) : date)
+  const hour = String(parts.hour).padStart(2, '0')
+  const minute = String(parts.minute).padStart(2, '0')
+  return `${dateKey(typeof date === 'string' ? new Date(date) : date)} ${hour}:${minute}`
+}

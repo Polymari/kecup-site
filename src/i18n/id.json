@@ -139,7 +139,17 @@
     "name": "*Kecup* itu kecupan kecil — digabung dengan *cup*, jadi sekecup rasa dalam satu cup.",
     "values": "Nilai kami",
     "team": "Tim",
-    "timeline": "Perjalanan"
+    "timeline": "Perjalanan",
+    "valuesList": {
+      "oneHand": "Satu tangan",
+      "crunch": "Renyah dulu",
+      "share": "Bagi kecupnya"
+    },
+    "milestones": {
+      "y2024": "Proyek kelas dapat nama.",
+      "y2025": "Booth pertama di BINUS Anggrek.",
+      "y2026": "Craving Line resmi dibuka."
+    }
   },
   "franchise": {
     "title": "Setiap lingkungan layak punya KeCup",
@@ -306,7 +316,8 @@
       "avgTicket": "Rata-rata transaksi",
       "alerts": "Peringatan stok",
       "sparkline": "7 hari terakhir",
-      "status": "Status outlet"
+      "status": "Status outlet",
+      "periodSummary": "Semua pesanan: {{orders}} · {{combos}} dengan Craving Cup"
     },
     "cashier": {
       "title": "Kasir",
@@ -332,7 +343,9 @@
       "adjust": "Sesuaikan",
       "waste": "Catat waste",
       "movements": "Riwayat pergerakan",
-      "note": "Catatan"
+      "note": "Catatan",
+      "stockValue": "Nilai stok",
+      "weightedAverage": "pakai rata-rata tertimbang"
     },
     "sales": {
       "title": "Riwayat penjualan",
@@ -360,7 +373,11 @@
       "payback": "Balik modal",
       "whatIf": "Simulasi biaya",
       "pricingInsight": "Insight harga",
-      "suggest": "Harga yang disarankan"
+      "suggest": "Harga yang disarankan",
+      "fewer": "Sedikit",
+      "more": "Banyak pesanan",
+      "cups": "{{count}} cup",
+      "applied": "Biaya satuan diperbarui"
     },
     "settings": {
       "title": "Pengaturan outlet",
@@ -372,5 +389,27 @@
       "tempClosed": "Sementara tutup",
       "saved": "Tersimpan — langsung tayang di situs publik"
     }
+  },
+  "home": {
+    "oneHand": {
+      "title": "satu tangan",
+      "text": "Balas chat",
+      "scroll": "Scroll feed",
+      "bag": "Bawa tas"
+    },
+    "igWall": {
+      "title": "Dinding Instagram",
+      "sub": "Tag @eatkecup biar nampang di dinding."
+    },
+    "saveSticker": "Hemat {{amount}}"
+  },
+  "days": {
+    "sun": "Min",
+    "mon": "Sen",
+    "tue": "Sel",
+    "wed": "Rab",
+    "thu": "Kam",
+    "fri": "Jum",
+    "sat": "Sab"
   }
 }

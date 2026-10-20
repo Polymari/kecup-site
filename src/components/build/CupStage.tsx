@@ -58,7 +58,7 @@ export function CupStage({ flavor, drink }: CupStageProps) {
     <div className="sticky top-28">
       <Arch className="relative mx-auto aspect-[4/5] w-full max-w-sm">
         <Suspense fallback={<CupMock flavor={flavor} drink={drink} />}>
-          <CupCanvas flavor={flavor} drink={drink} />
+          <CupCanvas flavor={flavor} drink={drink} draggable className="absolute inset-0" />
         </Suspense>
         <CheckerBand cell={16} rows={2} className="absolute inset-x-0 bottom-0" />
       </Arch>

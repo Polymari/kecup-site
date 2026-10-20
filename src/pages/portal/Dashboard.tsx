@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { MENU_BY_ID } from '@/data/menu'
+import { STOCK_BY_ID } from '@/data/stock'
 import { byDay, summarize } from '@/lib/analytics'
 import { dateKey, dateKeyToUtc } from '@/lib/wib'
 import { formatRupiah } from '@/lib/money'
@@ -120,7 +121,7 @@ export default function Dashboard() {
             <ul className="mt-3 space-y-2">
               {lowRows.map((row) => (
                 <li key={row.stockItemId} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="text-ink">{row.stockItemId}</span>
+                  <span className="text-ink">{t(STOCK_BY_ID[row.stockItemId]?.nameKey ?? row.stockItemId)}</span>
                   <Badge tone={row.qty <= 0 ? 'ketchup' : 'sun'}>
                     {row.qty <= 0 ? t('status.outOfStock') : t('status.lowStock')}
                   </Badge>
@@ -129,9 +130,12 @@ export default function Dashboard() {
             </ul>
           )}
           <p className="mt-4 font-mono text-xs text-brick">
-            {t('portal.dashboard.orders')}: {sales.length} ·{' '}
-            {sales.filter((sale) => sale.items.some((item) => MENU_BY_ID[item.menuItemId]?.kind === 'combo')).length}{' '}
-            combo
+            {t('portal.dashboard.periodSummary', {
+              orders: sales.length,
+              combos: sales.filter((sale) =>
+                sale.items.some((item) => MENU_BY_ID[item.menuItemId]?.kind === 'combo'),
+              ).length,
+            })}
           </p>
         </Card>
       </div>

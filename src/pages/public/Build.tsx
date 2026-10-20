@@ -92,6 +92,7 @@ export default function Build() {
                         key={entry.key}
                         type="button"
                         disabled={!available}
+                        aria-pressed={flavor === entry.key}
                         onClick={() => setFlavor(entry.key)}
                         className={cn(
                           'flex h-24 w-24 flex-col items-center justify-center rounded-full border-[3px] border-ink font-display text-xs font-semibold transition-transform',
@@ -124,6 +125,7 @@ export default function Build() {
                         key={entry.key}
                         type="button"
                         disabled={!available}
+                        aria-pressed={drink === entry.key}
                         onClick={() => setDrink(entry.key)}
                         className={cn(
                           'rounded-full border-[3px] border-ink px-5 py-2.5 font-display font-semibold transition-transform',
@@ -148,6 +150,7 @@ export default function Build() {
                 <div className="mt-3 flex flex-wrap items-center gap-3">
                   <button
                     type="button"
+                    aria-pressed={asCombo}
                     onClick={() => setAsCombo(true)}
                     className={cn(
                       'rounded-full border-[3px] border-ink px-5 py-2 font-display font-semibold',
@@ -158,6 +161,7 @@ export default function Build() {
                   </button>
                   <button
                     type="button"
+                    aria-pressed={!asCombo}
                     onClick={() => setAsCombo(false)}
                     className={cn(
                       'rounded-full border-[3px] border-ink px-5 py-2 font-display font-semibold',

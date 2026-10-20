@@ -50,3 +50,25 @@ test('outlets page lists all six stations', async ({ page }) => {
   await expect(page.getByRole('img', { name: 'Craving Line' })).toBeVisible()
   await expect(page.getByRole('article')).toHaveCount(6)
 })
+
+test('3D cup canvases mount without console errors', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text())
+  })
+
+  await page.goto('/lab/cup')
+  await expect(page.locator('canvas')).toHaveCount(2)
+  await page.getByRole('button', { name: 'tea-fizzy' }).click()
+  await page.getByRole('button', { name: 'cheese' }).click()
+  await page.getByRole('button', { name: 'Replay assembly' }).click()
+
+  await page.goto('/build')
+  await expect(page.locator('canvas')).toHaveCount(1)
+  await page.getByRole('button', { name: /Creamy Mushroom Nachos/ }).click()
+  await page.getByRole('button', { name: 'Fizzy Tea', exact: true }).click()
+  await page.waitForTimeout(800)
+
+  expect(errors).toEqual([])
+})

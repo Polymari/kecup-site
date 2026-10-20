@@ -30,7 +30,7 @@ import {
   summarize,
   topItems,
 } from '@/lib/analytics'
-import { dateKey } from '@/lib/wib'
+import { DAY_KEYS, dateKey } from '@/lib/wib'
 import { computeCogs } from '@/lib/recipes'
 import { formatRupiah, formatRupiahExact } from '@/lib/money'
 import { pricingInsight } from '@/lib/pricing'
@@ -51,7 +51,7 @@ export default function Analytics() {
   const { t } = useTranslation()
   const sales = usePortal((state) => state.sales)
   const stock = usePortal((state) => state.stock)
-  const restock = usePortal((state) => state.restock)
+  const setUnitCost = usePortal((state) => state.setUnitCost)
   const [rangeDays, setRangeDays] = useState(30)
   const [whatIf, setWhatIf] = useState<Record<string, number>>({})
 
@@ -149,12 +149,12 @@ export default function Analytics() {
           </p>
           <div className="mt-2 h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={top}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(74,21,18,0.15)" />
-                <XAxis dataKey="name" tick={{ fontSize: 9 }} interval={0} />
-                <YAxis tick={{ fontSize: 10 }} width={60} tickFormatter={(v) => `${v / 1000}k`} />
+              <BarChart data={top} layout="vertical" margin={{ left: 8, right: 16 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(74,21,18,0.15)" horizontal={false} />
+                <XAxis type="number" tick={{ fontSize: 10 }} tickFormatter={(v) => `${v / 1000}k`} />
+                <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={150} />
                 <Tooltip formatter={(value) => formatRupiah(Number(value))} />
-                <Bar dataKey="revenue" fill="var(--color-ketchup)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="revenue" fill="var(--color-ketchup)" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -171,19 +171,21 @@ export default function Analytics() {
                   <PieChart>
                     <Pie
                       data={[
-                        { name: 'combo', value: mix.combo },
-                        { name: 'snack', value: mix.snack },
-                        { name: 'drink', value: mix.drink },
+                        { name: t('menu.tabs.combos'), value: mix.combo },
+                        { name: t('menu.tabs.snacks'), value: mix.snack },
+                        { name: t('menu.tabs.drinks'), value: mix.drink },
                       ]}
                       dataKey="value"
+                      nameKey="name"
                       innerRadius={35}
                       outerRadius={65}
                     >
                       {PIE_COLORS.map((color) => (
-                        <Cell key={color} fill={color} />
+                        <Cell key={color} fill={color} stroke="var(--color-ink)" strokeWidth={2} />
                       ))}
                     </Pie>
                     <Tooltip formatter={(value) => formatRupiah(Number(value))} />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -212,20 +214,40 @@ export default function Analytics() {
           {t('portal.analytics.heatmap')}
         </p>
         <div className="mt-2 overflow-x-auto">
-          <div className="grid min-w-[620px] grid-cols-[28px_repeat(24,1fr)] gap-0.5">
-            {heat.map((row, weekday) =>
-              row.map((cell, hour) => {
+          {/* 1 label column + 24 hour columns; every row must emit 25 cells or the grid shears diagonally. */}
+          <div className="grid min-w-[620px] grid-cols-[32px_repeat(24,1fr)] gap-0.5">
+            <span aria-hidden />
+            {Array.from({ length: 24 }, (_, hour) => (
+              <span key={`h-${hour}`} className="text-center font-mono text-[9px] text-brick">
+                {hour % 3 === 0 ? String(hour).padStart(2, '0') : ''}
+              </span>
+            ))}
+            {heat.map((row, weekday) => [
+              <span
+                key={`d-${weekday}`}
+                className="flex items-center font-mono text-[10px] font-bold text-brick"
+              >
+                {t(`days.${DAY_KEYS[weekday]}`)}
+              </span>,
+              ...row.map((cell, hour) => {
                 const intensity = cell.count === 0 ? 0 : Math.min(4, Math.ceil(cell.count / 1.5))
                 return (
                   <div
                     key={`${weekday}-${hour}`}
-                    title={`${weekday} ${hour}:00 — ${cell.count} orders`}
+                    title={`${t(`days.${DAY_KEYS[weekday]}`)} ${String(hour).padStart(2, '0')}:00 — ${cell.count}`}
                     className="aspect-square rounded-[2px]"
                     style={{ backgroundColor: HEAT_COLORS[intensity] }}
                   />
                 )
               }),
-            )}
+            ])}
+          </div>
+          <div className="mt-2 flex items-center justify-end gap-1 font-mono text-[10px] text-brick">
+            {t('portal.analytics.fewer')}
+            {HEAT_COLORS.map((color) => (
+              <span key={color} className="h-3 w-3 rounded-[2px]" style={{ backgroundColor: color }} />
+            ))}
+            {t('portal.analytics.more')}
           </div>
         </div>
       </Card>
@@ -280,7 +302,7 @@ export default function Analytics() {
           {[500000, 1000000, 2000000].map((capital) => (
             <div key={capital} className="mt-2 flex items-center justify-between text-sm">
               <span className="font-mono">{formatRupiah(capital)}</span>
-              <Badge tone="butter">{paybackCups(capital)} cups</Badge>
+              <Badge tone="butter">{t('portal.analytics.cups', { count: paybackCups(capital) })}</Badge>
             </div>
           ))}
           <p className="mt-3 text-xs text-brick">{t('franchise.disclaimer')}</p>
@@ -318,7 +340,17 @@ export default function Analytics() {
                     />
                     <button
                       type="button"
-                      onClick={() => restock(entry.stockItemId, 0, roundedPortionCost({ ...entry, lines: [{ ...entry.lines[0], cost: override ?? entry.lines[0].cost }] }), 'what-if applied')}
+                      onClick={() =>
+                        setUnitCost(
+                          entry.stockItemId,
+                          roundedPortionCost({
+                            ...entry,
+                            lines: entry.lines.map((line, index) =>
+                              index === 0 ? { ...line, cost: override ?? line.cost } : line,
+                            ),
+                          }),
+                        )
+                      }
                       className="rounded-full border-2 border-ink bg-butter px-2 py-0.5 text-[10px] font-bold"
                     >
                       {t('costing.applyCost')}

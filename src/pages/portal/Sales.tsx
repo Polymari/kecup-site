@@ -2,10 +2,17 @@ import { Fragment, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { MENU_BY_ID } from '@/data/menu'
 import { formatRupiah } from '@/lib/money'
+import { formatWibDateTime } from '@/lib/wib'
 import { Badge } from '@/components/brand/Badge'
 import { Card } from '@/components/brand/Card'
 import { usePortal } from '@/store/portal'
 import { cn } from '@/lib/cn'
+
+/** Short human-readable code: "demo-anggrek-42" → "#0042", "sale-…-123456" → "#123456". */
+function saleCode(id: string): string {
+  const tail = id.split('-').pop() ?? id
+  return `#${tail.padStart(4, '0')}`
+}
 
 export default function Sales() {
   const { t } = useTranslation()
@@ -13,7 +20,11 @@ export default function Sales() {
   const voidSale = usePortal((state) => state.voidSale)
   const [expanded, setExpanded] = useState<string | null>(null)
 
-  const rows = useMemo(() => sales.slice(0, 120), [sales])
+  // Newest first; the demo dataset is generated oldest → newest.
+  const rows = useMemo(
+    () => [...sales].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 120),
+    [sales],
+  )
 
   const exportCsv = () => {
     const header = 'id,created_at,payment_method,total,cogs,voided,items'
@@ -76,10 +87,8 @@ export default function Sales() {
                     className={cn('cursor-pointer border-b border-ink/10', sale.voided && 'opacity-50')}
                     onClick={() => setExpanded(expanded === sale.id ? null : sale.id)}
                   >
-                    <td className="py-2 pr-3 font-mono text-xs">
-                      {sale.createdAt.slice(0, 16).replace('T', ' ')}
-                    </td>
-                    <td className="py-2 pr-3 font-mono text-xs">{sale.id.slice(-6)}</td>
+                    <td className="py-2 pr-3 font-mono text-xs">{formatWibDateTime(sale.createdAt)}</td>
+                    <td className="py-2 pr-3 font-mono text-xs">{saleCode(sale.id)}</td>
                     <td className="py-2 pr-3">
                       <Badge tone={sale.paymentMethod === 'qris' ? 'lime' : 'butter'}>
                         {t(`portal.cashier.${sale.paymentMethod}`)}

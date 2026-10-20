@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { TransitionLink } from '@/anim/TransitionLink'
 import { Badge } from '@/components/brand/Badge'
@@ -10,12 +10,14 @@ import { Sticker } from '@/components/brand/Sticker'
 import { Preloader } from '@/components/home/Preloader'
 import { HeroAssembly } from '@/components/home/HeroAssembly'
 import { MenuItemCard } from '@/components/menu/MenuItemCard'
-import { MENU_ITEMS } from '@/data/menu'
+import { MENU_BY_ID, MENU_ITEMS } from '@/data/menu'
 import type { FlavorKey } from '@/data/types'
 import { isOpenNow } from '@/lib/hours'
 import { formatK } from '@/lib/money'
 import { cn } from '@/lib/cn'
 import { useAvailability, useOutlets } from '@/hooks/useOutletLive'
+
+const CupCanvas = lazy(() => import('@/three/CupCanvas'))
 
 const FLAVORS: { key: FlavorKey; itemId: string; color: string }[] = [
   { key: 'bolo', itemId: 'nachos-bolo', color: 'var(--color-checker)' },
@@ -27,6 +29,8 @@ export default function Home() {
   const { t } = useTranslation()
   const [flavor, setFlavor] = useState<FlavorKey>('bolo')
   const [heroReady, setHeroReady] = useState(false)
+  const activeFlavor = FLAVORS.find((entry) => entry.key === flavor) ?? FLAVORS[0]
+  const activeItem = MENU_BY_ID[activeFlavor.itemId]
   const combos = MENU_ITEMS.filter((item) => item.kind === 'combo')
   const outlets = useOutlets()
   const anggrek = outlets[0]
@@ -57,30 +61,40 @@ export default function Home() {
         <p className="mt-2 text-center text-ink/70">{t('flavors.sub')}</p>
 
         <div
-          className="mt-8 rounded-[2rem] border-[3px] border-ink p-8 transition-colors"
-          style={{ backgroundColor: 'var(--color-cream-deep)' }}
+          className="mt-8 grid items-center gap-6 rounded-[2rem] border-[3px] border-ink p-6 transition-colors duration-500 md:grid-cols-2 md:p-8"
+          style={{
+            backgroundColor: `color-mix(in srgb, ${activeFlavor.color} 16%, var(--color-cream-deep))`,
+          }}
         >
-          <div className="flex flex-wrap items-center justify-center gap-4">
-            {FLAVORS.map((entry) => (
-              <button
-                key={entry.key}
-                type="button"
-                onClick={() => setFlavor(entry.key)}
-                aria-pressed={flavor === entry.key}
-                className={cn(
-                  'h-20 w-20 rounded-full border-[3px] border-ink transition-transform',
-                  flavor === entry.key ? 'scale-110 shadow-sticker' : 'hover:-translate-y-1',
-                )}
-                style={{ backgroundColor: entry.color }}
-              />
-            ))}
+          <div className="relative mx-auto aspect-[4/5] w-full max-w-xs">
+            <Suspense fallback={null}>
+              <CupCanvas flavor={flavor} drink="tea-cloudy" draggable className="absolute inset-0" />
+            </Suspense>
           </div>
-          <p className="mt-6 text-center font-display text-2xl font-semibold text-ink">
-            {t(MENU_ITEMS.find((item) => item.id === FLAVORS.find((f) => f.key === flavor)!.itemId)!.nameKey)}
-          </p>
-          <p className="mt-2 text-center text-ink/80">
-            {t(MENU_ITEMS.find((item) => item.id === FLAVORS.find((f) => f.key === flavor)!.itemId)!.descKey)}
-          </p>
+
+          <div>
+            <div className="flex flex-wrap items-center justify-center gap-4" role="group" aria-label={t('flavors.title')}>
+              {FLAVORS.map((entry) => (
+                <button
+                  key={entry.key}
+                  type="button"
+                  onClick={() => setFlavor(entry.key)}
+                  aria-pressed={flavor === entry.key}
+                  aria-label={t(MENU_BY_ID[entry.itemId].nameKey)}
+                  title={t(MENU_BY_ID[entry.itemId].nameKey)}
+                  className={cn(
+                    'h-20 w-20 rounded-full border-[3px] border-ink transition-transform',
+                    flavor === entry.key ? 'scale-110 shadow-sticker' : 'hover:-translate-y-1',
+                  )}
+                  style={{ backgroundColor: entry.color }}
+                />
+              ))}
+            </div>
+            <p className="mt-6 text-center font-display text-2xl font-semibold text-ink" aria-live="polite">
+              {t(activeItem.nameKey)}
+            </p>
+            <p className="mt-2 text-center text-ink/80">{t(activeItem.descKey)}</p>
+          </div>
         </div>
       </section>
 
@@ -99,11 +113,11 @@ export default function Home() {
             </TransitionLink>
           </div>
           <Card className="p-6">
-            <p className="font-script text-3xl text-ketchup">one hand</p>
+            <p className="font-script text-3xl text-ketchup">{t('home.oneHand.title')}</p>
             <ul className="mt-3 space-y-2 text-ink/80">
-              <li>☕ Text back</li>
-              <li>📱 Scroll the feed</li>
-              <li>🎒 Carry your bag</li>
+              <li>☕ {t('home.oneHand.text')}</li>
+              <li>📱 {t('home.oneHand.scroll')}</li>
+              <li>🎒 {t('home.oneHand.bag')}</li>
             </ul>
           </Card>
         </div>
@@ -116,7 +130,7 @@ export default function Home() {
             <p className="mt-1 text-ink/70">{t('combo.save')}</p>
           </div>
           <Sticker tone="ketchup" rotate={-4}>
-            Save {formatK(7000)}
+            {t('home.saveSticker', { amount: formatK(7000) })}
           </Sticker>
         </div>
         <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -127,13 +141,13 @@ export default function Home() {
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-16">
-        <h2 className="font-display text-4xl font-bold text-ink">Instagram wall</h2>
-        <p className="mt-1 text-ink/70">Tag @eatkecup for a spot on the wall.</p>
+        <h2 className="font-display text-4xl font-bold text-ink">{t('home.igWall.title')}</h2>
+        <p className="mt-1 text-ink/70">{t('home.igWall.sub')}</p>
         <div className="mt-6 flex flex-wrap gap-4">
           {['ig-wall', 'ig-wall', 'ig-wall', 'ig-wall'].map((key, index) => (
             <div
               key={index}
-              className="w-40 rotate-[-2deg] border-[3px] border-ink bg-cream p-2 shadow-sticker even:rotate-2"
+              className="w-40 border-[3px] border-ink bg-cream p-2 shadow-sticker"
               style={{ transform: `rotate(${index % 2 === 0 ? -2 : 2}deg)` }}
             >
               <Photo photoKey={key} className="border-0" />

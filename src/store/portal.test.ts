@@ -151,3 +151,23 @@ describe('menu price integrity', () => {
     }
   })
 })
+
+describe('portal store — costing what-if', () => {
+  beforeEach(() => {
+    usePortal.setState({ ...usePortal.getState(), stock: initialStock(OUTLETS_BY_SLUG['anggrek']) })
+  })
+
+  it('applies a new unit cost directly (restocking 0 units would leave it unchanged)', () => {
+    const before = usePortal.getState().stock.find((row) => row.stockItemId === 'chips')!
+    usePortal.getState().setUnitCost('chips', 8200)
+    const after = usePortal.getState().stock.find((row) => row.stockItemId === 'chips')!
+    expect(after.unitCost).toBe(8200)
+    expect(after.qty).toBe(before.qty)
+  })
+
+  it('ignores invalid unit costs', () => {
+    usePortal.getState().setUnitCost('chips', -5)
+    usePortal.getState().setUnitCost('chips', Number.NaN)
+    expect(usePortal.getState().stock.find((row) => row.stockItemId === 'chips')!.unitCost).toBe(7000)
+  })
+})

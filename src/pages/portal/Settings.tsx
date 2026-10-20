@@ -128,7 +128,7 @@ export default function Settings() {
             const entry = settings.hours[day]
             return (
               <div key={day} className="flex flex-wrap items-center gap-2 text-sm">
-                <span className="w-12 font-semibold capitalize text-ink">{day}</span>
+                <span className="w-12 font-semibold text-ink">{t(`days.${day}`)}</span>
                 <input
                   type="time"
                   value={entry.open}

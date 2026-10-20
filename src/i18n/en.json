@@ -139,7 +139,17 @@
     "name": "*Kecup* is the little kiss you blow — paired with *cup*, it's a kiss of flavor in one cup.",
     "values": "Our values",
     "team": "The team",
-    "timeline": "Milestones"
+    "timeline": "Milestones",
+    "valuesList": {
+      "oneHand": "One hand",
+      "crunch": "Crunch first",
+      "share": "Share the kecup"
+    },
+    "milestones": {
+      "y2024": "A class project gets a name.",
+      "y2025": "First booth at BINUS Anggrek.",
+      "y2026": "The Craving Line opens."
+    }
   },
   "franchise": {
     "title": "Every neighborhood deserves a KeCup",
@@ -306,7 +316,8 @@
       "avgTicket": "Average ticket",
       "alerts": "Stock alerts",
       "sparkline": "Last 7 days",
-      "status": "Outlet status"
+      "status": "Outlet status",
+      "periodSummary": "All orders: {{orders}} · {{combos}} with a Craving Cup"
     },
     "cashier": {
       "title": "Cashier",
@@ -332,7 +343,9 @@
       "adjust": "Adjust",
       "waste": "Log waste",
       "movements": "Movement ledger",
-      "note": "Note"
+      "note": "Note",
+      "stockValue": "Stock value",
+      "weightedAverage": "keep weighted average"
     },
     "sales": {
       "title": "Sales history",
@@ -360,7 +373,11 @@
       "payback": "Payback",
       "whatIf": "Costing what-if",
       "pricingInsight": "Pricing insights",
-      "suggest": "Suggested price"
+      "suggest": "Suggested price",
+      "fewer": "Fewer",
+      "more": "More orders",
+      "cups": "{{count}} cups",
+      "applied": "Unit cost updated"
     },
     "settings": {
       "title": "Outlet settings",
@@ -372,5 +389,27 @@
       "tempClosed": "Temporarily closed",
       "saved": "Saved — live on the public site"
     }
+  },
+  "home": {
+    "oneHand": {
+      "title": "one hand",
+      "text": "Text back",
+      "scroll": "Scroll the feed",
+      "bag": "Carry your bag"
+    },
+    "igWall": {
+      "title": "Instagram wall",
+      "sub": "Tag @eatkecup for a spot on the wall."
+    },
+    "saveSticker": "Save {{amount}}"
+  },
+  "days": {
+    "sun": "Sun",
+    "mon": "Mon",
+    "tue": "Tue",
+    "wed": "Wed",
+    "thu": "Thu",
+    "fri": "Fri",
+    "sat": "Sat"
   }
 }

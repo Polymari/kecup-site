@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { addDaysToKey, dateKey, dateKeyToUtc, dayKey, minutesOfDay, wibParts } from './wib'
+import {
+  addDaysToKey,
+  dateKey,
+  dateKeyToUtc,
+  dayKey,
+  formatWibDateTime,
+  minutesOfDay,
+  wibParts,
+} from './wib'
 
 describe('wibParts', () => {
   it('shifts UTC to Asia/Jakarta (UTC+7)', () => {
@@ -46,5 +54,12 @@ describe('dayKey and minutesOfDay', () => {
 describe('addDaysToKey', () => {
   it('rolls over months correctly', () => {
     expect(addDaysToKey('2026-10-30', 3)).toBe('2026-11-02')
+  })
+})
+
+describe('formatWibDateTime', () => {
+  it('formats an ISO instant as Jakarta wall-clock time', () => {
+    expect(formatWibDateTime('2026-09-21T05:07:00.000Z')).toBe('2026-09-21 12:07')
+    expect(formatWibDateTime(new Date('2026-10-19T17:05:00Z'))).toBe('2026-10-20 00:05')
   })
 })

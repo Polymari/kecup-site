@@ -71,8 +71,8 @@ export default function OutletDetail() {
                       day === today && 'bg-butter/40 font-semibold',
                     )}
                   >
-                    <td className="py-1.5 capitalize">
-                      {day}
+                    <td className="py-1.5">
+                      {t(`days.${day}`)}
                       {day === today ? ` · ${t('outlets.today')}` : ''}
                     </td>
                     <td className="py-1.5 text-right font-mono">

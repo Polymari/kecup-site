@@ -14,22 +14,12 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
+        // Only group the core React runtime. three.js / recharts are reached via
+        // lazy routes and lazy canvases, so natural code-splitting keeps them out
+        // of the entry. (Pinning them to named chunks used to drag shared deps
+        // like zustand into those chunks and made the entry preload them.)
         manualChunks(id: string) {
-          if (
-            id.includes('node_modules/three') ||
-            id.includes('node_modules/@react-three') ||
-            id.includes('node_modules/three-stdlib')
-          ) {
-            return 'three'
-          }
-          if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-')) {
-            return 'charts'
-          }
-          if (
-            id.includes('node_modules/react') ||
-            id.includes('node_modules/scheduler') ||
-            id.includes('node_modules/react-router')
-          ) {
+          if (/[\\/]node_modules[\\/](react|react-dom|scheduler|react-router)[\\/]/.test(id)) {
             return 'react'
           }
           return undefined

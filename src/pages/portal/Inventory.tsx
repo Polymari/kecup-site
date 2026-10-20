@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { STOCK_BY_ID } from '@/data/stock'
 import { formatRupiah, formatRupiahExact } from '@/lib/money'
+import { dateKey } from '@/lib/wib'
 import { Badge } from '@/components/brand/Badge'
 import { Card } from '@/components/brand/Card'
 import { usePortal } from '@/store/portal'
@@ -132,7 +133,7 @@ export default function Inventory() {
               <input
                 type="number"
                 value={cost ?? ''}
-                placeholder="weighted average"
+                placeholder={t('portal.inventory.weightedAverage')}
                 onChange={(event) =>
                   setCost(event.target.value === '' ? null : Number(event.target.value))
                 }
@@ -168,7 +169,7 @@ export default function Inventory() {
             {movements.slice(0, 60).map((movement) => (
               <li key={movement.id} className="flex items-center gap-2 border-b border-ink/10 pb-1">
                 <span className="w-24 shrink-0 text-brick">
-                  {movement.createdAt.slice(0, 10)}
+                  {dateKey(new Date(movement.createdAt))}
                 </span>
                 <Badge tone={movement.delta < 0 ? 'ketchup' : 'lime'}>{movement.kind}</Badge>
                 <span className="min-w-0 flex-1 truncate text-ink">
@@ -185,7 +186,7 @@ export default function Inventory() {
       </div>
 
       <p className="mt-4 font-mono text-xs text-brick">
-        {t('portal.inventory.unitCost')}: {formatRupiah(stock.reduce((sum, row) => sum + row.qty * row.unitCost, 0))}
+        {t('portal.inventory.stockValue')}: {formatRupiah(stock.reduce((sum, row) => sum + row.qty * row.unitCost, 0))}
       </p>
     </section>
   )

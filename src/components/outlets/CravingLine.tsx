@@ -100,6 +100,11 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
           const outlet = outlets[index]
           const status = isOpenNow(outlet, new Date())
           const selected = outlet.slug === selectedSlug
+          // End stations sit near the viewBox edges — anchor their labels inward so they aren't clipped.
+          const first = index === 0
+          const last = index === stations.length - 1
+          const anchor = first ? 'start' : last ? 'end' : 'middle'
+          const labelX = first ? -16 : last ? 16 : 0
           return (
             <g
               key={outlet.slug}
@@ -114,8 +119,9 @@ export function CravingLine({ outlets, onSelect, selectedSlug }: CravingLineProp
                 strokeWidth={5}
               />
               <text
+                x={labelX}
                 y={38}
-                textAnchor="middle"
+                textAnchor={anchor}
                 fill="var(--color-ink)"
                 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 600 }}
               >
