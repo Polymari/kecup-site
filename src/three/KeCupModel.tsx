@@ -17,6 +17,7 @@ import {
   chipPlacements,
   createBitGeometry,
   createChipGeometry,
+  createDripGeometry,
   createIceGeometry,
   createSauceGeometry,
   cupProfilePoints,
@@ -27,7 +28,6 @@ import {
   sauceBitPlacements,
   sauceDrips,
   trayProfilePoints,
-  withWhiteColors,
 } from './geometry'
 import type { BitShape } from './geometry'
 import { INK, applyDrink, applyFlavor, disposeMaterials, makeMaterials } from './materials'
@@ -68,9 +68,9 @@ const EXPLODED_CENTER_Y = (EXPLODE_OFFSETS.cup + SAUCE.y + SAUCE.thickness + EXP
 /** Sauce pivot sits near the blob's base so squash flattens it onto the chips. */
 const SAUCE_PIVOT_Y = SAUCE.y - SAUCE.thickness * 0.5
 
-const CHIP_DARK = new THREE.Color('#CFA27A')
-const CHIP_LIGHT = new THREE.Color('#FFF8EC')
-const CHIP_MID = new THREE.Color('#F6E6CF')
+const CHIP_DARK = new THREE.Color('#E59A34')
+const CHIP_LIGHT = new THREE.Color('#FFF6CC')
+const CHIP_MID = new THREE.Color('#FFE08A')
 
 const MAX_ICE = Math.max(...DRINKS.map((drink) => DRINK_VARIANTS[drink].ice))
 
@@ -173,10 +173,7 @@ function useGeometries() {
           sauceDrips(flavor).map((drip) => ({
             ...drip,
             // Anchored at the top so scaling y "oozes" the drip downwards.
-            // White vertex colours: the sauce material is vertex-coloured (missing colours render black).
-            geometry: withWhiteColors(
-              new THREE.CapsuleGeometry(drip.radius, drip.length, 4, 12).translate(0, -drip.length / 2, 0),
-            ),
+            geometry: createDripGeometry(drip.radius, drip.length),
           })),
         ]),
       ) as Record<FlavorKey, Array<ReturnType<typeof sauceDrips>[number] & { geometry: THREE.BufferGeometry }>>,
@@ -413,8 +410,8 @@ export function KeCupModel({ flavor, drink, style = 'realistic', state, autoSpin
       sauceGroup.current.scale.set(presence * spread, presence * squash, presence * spread)
       sauceGroup.current.position.y =
         SAUCE_PIVOT_Y + EXPLODE_OFFSETS.sauce * explode + (1 - easeOutCubic(sauceStage)) * 1.8
-      // Drips run down over the chips once landed and retract when the stack explodes.
-      const ooze = clamp01(sauceStage * 1.6 - 0.6) * (1 - explode)
+      // Drips run down over the chips once landed and stay juicy when the stack explodes.
+      const ooze = clamp01(sauceStage * 1.6 - 0.6) * (1 - explode * 0.15)
       flavorDrips.forEach((_, index) => {
         const mesh = dripRefs.current[index]
         if (!mesh) return
@@ -509,7 +506,7 @@ export function KeCupModel({ flavor, drink, style = 'realistic', state, autoSpin
             args={[geometries.chips[variant], materials.chip, entries.length]}
             frustumCulled={false}
           >
-            {toon ? <Outlines thickness={0.01} color={INK} /> : null}
+            <Outlines thickness={toon ? 0.01 : 0.0045} color={toon ? INK : '#7A3B10'} />
           </instancedMesh>
         ))}
       </group>

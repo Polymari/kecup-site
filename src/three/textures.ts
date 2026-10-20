@@ -19,10 +19,10 @@ function makeTexture(data: Uint8Array, size: number, srgb: boolean): THREE.DataT
 }
 
 const hex = (value: string) => new THREE.Color(value)
-const CHIP_BASE = hex('#F3BC4C')
-const CHIP_TOAST = hex('#CB8427')
-const CHIP_BLISTER = hex('#F8DC95')
-const CHIP_SPECK = hex('#8C5B2C')
+const CHIP_BASE = hex('#F8BF3C')
+const CHIP_TOAST = hex('#D67B18')
+const CHIP_BLISTER = hex('#FFF0AE')
+const CHIP_SPECK = hex('#5C2F0E')
 
 /**
  * Yellow-corn tortilla: golden base with mottled toasting, pale blisters and
@@ -37,15 +37,26 @@ export function createChipTextures(size = TEXTURE_SIZE): { map: THREE.DataTextur
       const u = x / size
       const v = y / size
       const mottle = tileNoise(u, v, 5, 4, 1)
-      const blister = tileNoise(u, v, 18, 2, 2)
-      const fine = tileNoise(u, v, 42, 1, 3)
-      const speck = noise3(x * 0.9, y * 0.9, 7, 4)
+      const blister = tileNoise(u, v, 14, 3, 2)
+      const microBlister = tileNoise(u, v, 28, 2, 5)
+      const fine = tileNoise(u, v, 46, 1, 3)
+      const speck = noise3(x * 0.85, y * 0.85, 7, 4)
 
       tmp.copy(CHIP_BASE)
-      tmp.lerp(CHIP_TOAST, Math.max(0, Math.min(1, (mottle + 0.08) * 2.2)))
-      if (blister > 0.16) tmp.lerp(CHIP_BLISTER, Math.min(1, (blister - 0.16) * 5) * 0.7)
-      if (speck > 0.93) tmp.lerp(CHIP_SPECK, Math.min(1, (speck - 0.93) * 18))
-      tmp.multiplyScalar(0.96 + fine * 0.12)
+      tmp.lerp(CHIP_TOAST, Math.max(0, Math.min(1, (mottle + 0.06) * 2.1)))
+      if (blister > 0.12) {
+        const bAmt = Math.min(1, (blister - 0.12) * 5.5)
+        tmp.lerp(CHIP_BLISTER, bAmt * 0.82)
+        // Fried blister rim toast: ring around large blisters gets golden-brown
+        if (blister > 0.24) {
+          tmp.lerp(CHIP_SPECK, Math.min(1, (blister - 0.24) * 8) * 0.45)
+        }
+      }
+      if (microBlister > 0.18) {
+        tmp.lerp(CHIP_BLISTER, Math.min(1, (microBlister - 0.18) * 4) * 0.4)
+      }
+      if (speck > 0.9) tmp.lerp(CHIP_SPECK, Math.min(1, (speck - 0.9) * 14))
+      tmp.multiplyScalar(0.95 + fine * 0.16)
 
       // Colours are mixed in linear space; the texture stores sRGB-encoded bytes.
       const srgb = tmp.convertLinearToSRGB()
@@ -55,7 +66,8 @@ export function createChipTextures(size = TEXTURE_SIZE): { map: THREE.DataTextur
       color[i + 2] = Math.round(Math.min(1, srgb.b) * 255)
       color[i + 3] = 255
 
-      const height = 0.5 + blister * 0.9 + fine * 0.35 - (speck > 0.93 ? 0.15 : 0)
+      const height =
+        0.5 + blister * 1.15 + microBlister * 0.45 + fine * 0.35 - (speck > 0.9 ? 0.2 : 0)
       const h = Math.round(Math.max(0, Math.min(1, height)) * 255)
       bump[i] = h
       bump[i + 1] = h

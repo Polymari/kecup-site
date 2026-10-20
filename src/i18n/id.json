@@ -36,9 +36,18 @@
     "end": "Camilan di atas. Seruput di bawah. Satu tangan."
   },
   "explode": {
+    "kicker": "Anatomi Satu Cup",
+    "heading": "Empat lapisan. Satu tangan. Tanpa kompromi.",
+    "sauceTitle": "Mahkota Saus Melimpah",
+    "sauce": "Saus Bolognese daging, Mushroom creamy, atau Keju lumer hangat di atas nachos",
+    "trayTitle": "Mangkuk Nachos Renyah",
     "tray": "Nampan nachos renyah, penuh saus",
+    "cupTitle": "Kunci Sedotan Menyatu",
+    "cup": "Satu cup menyatu — bawa semua dengan satu tangan",
+    "teaTitle": "Teh Dingin 16oz",
     "tea": "Teh berlapis, dingin dan siap seruput",
-    "cup": "Satu cup menyatu — bawa semua dengan satu tangan"
+    "snackZone": "ZONA RENYAH",
+    "sipZone": "ZONA SEGAR"
   },
   "flavors": {
     "title": "Pilih cravings-mu",

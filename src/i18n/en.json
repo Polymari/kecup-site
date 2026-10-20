@@ -36,9 +36,18 @@
     "end": "Snack on top. Sip below. One hand."
   },
   "explode": {
+    "kicker": "Anatomy of a Craving",
+    "heading": "Four layers. One hand. Zero compromise.",
+    "sauceTitle": "Loaded Sauce Crown",
+    "sauce": "Rich Bolognese, Creamy Mushroom, or Golden Cheese poured hot over the chips",
+    "trayTitle": "Crunchy Nacho Bowl",
     "tray": "A tray of crunchy nachos, loaded with sauce",
+    "cupTitle": "Thru-Cup Straw Lock",
+    "cup": "One connected cup — carry it all in one hand",
+    "teaTitle": "16oz Chilled Tea",
     "tea": "Layered tea, chilled and ready to sip",
-    "cup": "One connected cup — carry it all in one hand"
+    "snackZone": "CRUNCH ZONE",
+    "sipZone": "SIP ZONE"
   },
   "flavors": {
     "title": "Pick your craving",

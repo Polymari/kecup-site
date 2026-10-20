@@ -48,12 +48,12 @@ export function createIntroState(): CupAnimationState {
 
 /** Per-part offsets at explode = 1 (model units). */
 export const EXPLODE_OFFSETS = {
-  cup: -0.4,
-  tray: 0.3,
-  chips: 0.75,
-  sauce: 1.2,
-  strawX: 1.3,
-  strawY: 0.45,
+  cup: -0.45,
+  tray: 0.32,
+  chips: 0.38,
+  sauce: 0.78,
+  strawX: 1.25,
+  strawY: 0.38,
   /** Whole-model scale at full explode so the taller stack still fits the frame. */
-  scale: 0.74,
+  scale: 0.78,
 } as const

@@ -108,16 +108,16 @@ export function drinkProfilePoints(segments = 16): THREE.Vector2[] {
 // ---------------------------------------------------------------------------
 
 /** Circumradius of a chip triangle (side ≈ 0.52, about 3.6 cm at cup scale). */
-export const CHIP_SIZE = 0.3
-export const CHIP_THICKNESS = 0.022
-export const CHIP_COUNT = 64
-export const CHIP_VARIANT_COUNT = 3
+export const CHIP_SIZE = 0.305
+export const CHIP_THICKNESS = 0.025
+export const CHIP_COUNT = 76
+export const CHIP_VARIANT_COUNT = 4
 
 interface ChipShape {
   /** Bend across the chip (x²) and along it (y²); a negative value makes a saddle. */
   curlX: number
   curlY: number
-  /** Small surface ripples. */
+  /** Small surface ripples & fried blisters. */
   wave: number
   /** Corner rounding as a fraction of the side. */
   round: number
@@ -127,9 +127,10 @@ interface ChipShape {
 }
 
 const CHIP_SHAPES: readonly ChipShape[] = [
-  { curlX: 1.0, curlY: 0.3, wave: 0.012, round: 0.22, chew: 0.05, seed: 3 },
-  { curlX: 0.45, curlY: 0.85, wave: 0.016, round: 0.17, chew: 0.06, seed: 7 },
-  { curlX: 1.2, curlY: -0.45, wave: 0.01, round: 0.26, chew: 0.045, seed: 11 },
+  { curlX: 0.34, curlY: 0.12, wave: 0.009, round: 0.095, chew: 0.022, seed: 3 },
+  { curlX: 0.2, curlY: 0.32, wave: 0.011, round: 0.085, chew: 0.026, seed: 7 },
+  { curlX: 0.38, curlY: -0.16, wave: 0.008, round: 0.105, chew: 0.02, seed: 11 },
+  { curlX: -0.28, curlY: 0.26, wave: 0.01, round: 0.09, chew: 0.024, seed: 19 },
 ]
 
 function chipShape(variant: number): ChipShape {
@@ -139,7 +140,9 @@ function chipShape(variant: number): ChipShape {
 /** Height of the chip's mid-surface above its plane (local +Z). */
 export function chipSurfaceZ(variant: number, x: number, y: number): number {
   const shape = chipShape(variant)
-  return shape.curlX * x * x + shape.curlY * y * y + shape.wave * fbm3(x * 9, y * 9, shape.seed, 2, shape.seed) * 2
+  const lowWave = shape.wave * fbm3(x * 8.5, y * 8.5, shape.seed, 2, shape.seed) * 2
+  const blister = Math.max(0, fbm3(x * 18, y * 18, shape.seed + 3, 2, shape.seed + 7)) * 0.014
+  return shape.curlX * x * x + shape.curlY * y * y + lowWave + blister
 }
 
 /** Rounded, slightly irregular triangle outline (counter-clockwise, centroid at the origin). */
@@ -174,12 +177,12 @@ export function chipOutline(variant = 0, size = CHIP_SIZE, perSide = 6): THREE.V
 
 const CHIP_RINGS = 5
 /** Tortilla chips are thinner at the edge than in the middle. */
-const chipHalfThickness = (ringFraction: number) => (CHIP_THICKNESS / 2) * (1 - 0.35 * ringFraction * ringFraction)
+const chipHalfThickness = (ringFraction: number) => (CHIP_THICKNESS / 2) * (1 - 0.28 * ringFraction * ringFraction)
 
 /**
  * Closed chip mesh: curled top and bottom surfaces (rings from the centre to
- * the outline) joined by a thin edge strip. Shared edge vertices give the
- * rim a soft, rounded highlight. Vertex colours toast the edges.
+ * the outline) joined by a dedicated crisp bevel edge strip so the flat-fried
+ * faces keep sharp surface normals while the toasted rim catches a highlight.
  */
 export function createChipGeometry(variant = 0, size = CHIP_SIZE): THREE.BufferGeometry {
   const shape = chipShape(variant)
@@ -189,19 +192,23 @@ export function createChipGeometry(variant = 0, size = CHIP_SIZE): THREE.BufferG
   const uvs: number[] = []
   const colors: number[] = []
   const indices: number[] = []
-  const uvOffset = (variant % CHIP_VARIANT_COUNT) * 0.31
+  const uvOffset = (variant % CHIP_VARIANT_COUNT) * 0.27
 
-  const push = (x: number, y: number, z: number, ringFraction: number) => {
+  const push = (x: number, y: number, z: number, ringFraction: number, extraToast = 0) => {
     positions.push(x, y, z)
     uvs.push(x / (2 * size) + 0.5 + uvOffset, y / (2 * size) + 0.5 + uvOffset * 0.7)
-    const toast = smoothstep(0.5, 1, ringFraction) * 0.32 + Math.max(0, fbm3(x * 12, y * 12, shape.seed + 5, 2, 9)) * 0.25
-    colors.push(1 - toast * 0.7, 1 - toast * 1.0, 1 - toast * 1.55)
+    const blisterChar = Math.max(0, fbm3(x * 14, y * 14, shape.seed + 5, 2, 9)) * 0.24
+    const toast = smoothstep(0.48, 1, ringFraction) * 0.34 + blisterChar + extraToast
+    // Warm golden-amber toast: keeps red high, warms green, and darkens blue at the crispy rim.
+    colors.push(
+      Math.max(0.55, 1 - toast * 0.32),
+      Math.max(0.38, 1 - toast * 0.78),
+      Math.max(0.18, 1 - toast * 1.48),
+    )
   }
 
-  const surfaceStart: number[] = []
   for (const side of [1, -1]) {
     const start = positions.length / 3
-    surfaceStart.push(start)
     push(0, 0, chipSurfaceZ(variant, 0, 0) + side * chipHalfThickness(0), 0)
     for (let k = 1; k <= CHIP_RINGS; k++) {
       const f = k / CHIP_RINGS
@@ -228,13 +235,25 @@ export function createChipGeometry(variant = 0, size = CHIP_SIZE): THREE.BufferG
     }
   }
 
-  // Edge strip between the top and bottom outlines (outward-facing).
-  const edge = (start: number, i: number) => start + 1 + (CHIP_RINGS - 1) * n + (((i % n) + n) % n)
+  // Dedicated edge strip vertices between top and bottom outlines so face normals stay crisp.
+  const edgeTopStart = positions.length / 3
   for (let i = 0; i < n; i++) {
-    const t0 = edge(surfaceStart[0], i)
-    const t1 = edge(surfaceStart[0], i + 1)
-    const b0 = edge(surfaceStart[1], i)
-    const b1 = edge(surfaceStart[1], i + 1)
+    const x = outline[i].x
+    const y = outline[i].y
+    push(x, y, chipSurfaceZ(variant, x, y) + chipHalfThickness(1), 1, 0.08)
+  }
+  const edgeBotStart = positions.length / 3
+  for (let i = 0; i < n; i++) {
+    const x = outline[i].x
+    const y = outline[i].y
+    push(x, y, chipSurfaceZ(variant, x, y) - chipHalfThickness(1), 1, 0.08)
+  }
+  for (let i = 0; i < n; i++) {
+    const next = (i + 1) % n
+    const t0 = edgeTopStart + i
+    const t1 = edgeTopStart + next
+    const b0 = edgeBotStart + i
+    const b1 = edgeBotStart + next
     indices.push(b0, b1, t1, b0, t1, t0)
   }
 
@@ -329,7 +348,7 @@ export function chipPlacements(
   const nextVariant = () => variantCursor++ % CHIP_VARIANT_COUNT
 
   const place = (make: (attempt: number) => Omit<ChipPlacement, 'variant'>, variant: number) => {
-    for (let attempt = 0; attempt < 30; attempt++) {
+    for (let attempt = 0; attempt < 36; attempt++) {
       const chip = { ...make(attempt), variant }
       if (chipFitsBowl(chip)) {
         placements.push(chip)
@@ -338,27 +357,27 @@ export function chipPlacements(
     }
     // Fallback that always fits: lying flat on the bowl floor.
     placements.push({
-      x: jitter(0.12),
+      x: jitter(0.14),
       y: TRAY.y + 0.1 + placements.length * 0.002,
-      z: jitter(0.12),
+      z: jitter(0.14),
       yaw: rand() * Math.PI * 2,
-      lean: -Math.PI / 2,
+      lean: -Math.PI / 2 + jitter(0.25),
       twist: rand() * Math.PI * 2,
-      scale: 0.9,
-      tint: jitter(2),
+      scale: 0.92,
+      tint: jitter(1.6),
       variant,
     })
   }
 
-  const wallTotal = Math.round(count * 0.56)
-  const middle = Math.round(count * 0.14)
+  const wallTotal = Math.round(count * 0.42)
+  const middle = Math.round(count * 0.28)
   const crown = Math.max(0, count - wallTotal - middle)
 
-  // Wall: staggered rows, row size proportional to the circumference there.
+  // Wall: staggered rows nested inside the bowl, with natural tilt & twist variety.
   const rows = [
-    { h: 0.24, splay: 0 },
-    { h: 0.52, splay: 0.05 },
-    { h: 0.8, splay: 0.22 },
+    { h: 0.22, splay: 0.18 },
+    { h: 0.48, splay: 0.14 },
+    { h: 0.76, splay: 0.28 },
   ]
   const weights = rows.map((row) => trayRadiusAt(TRAY.y + row.h * TRAY.height))
   const weightSum = weights.reduce((sum, weight) => sum + weight, 0)
@@ -371,67 +390,67 @@ export function chipPlacements(
     placedWall += n
     const rowOffset = rand()
     for (let j = 0; j < n; j++) {
-      const angle = ((j + rowOffset + jitter(0.5)) / n) * Math.PI * 2
-      const baseY = TRAY.y + row.h * TRAY.height + jitter(0.08)
+      const angle = ((j + rowOffset + jitter(0.55)) / n) * Math.PI * 2
+      const baseY = TRAY.y + row.h * TRAY.height + jitter(0.09)
       const twist = rand() * Math.PI * 2
       place((attempt) => {
-        const y = baseY + attempt * 0.012
-        const r = trayRadiusAt(y) - 0.05 - attempt * 0.02
+        const y = baseY + attempt * 0.011
+        const r = trayRadiusAt(y) - 0.055 - attempt * 0.02
         return {
           x: Math.cos(angle) * Math.max(r, 0),
           y,
           z: Math.sin(angle) * Math.max(r, 0),
-          // Normal points inward, so the curl's convex side nests against the wall.
-          yaw: (3 * Math.PI) / 2 - angle + jitter(0.3),
-          lean: -(TRAY_WALL_LEAN + row.splay) + jitter(0.25),
+          yaw: (3 * Math.PI) / 2 - angle + jitter(0.65),
+          lean: -(TRAY_WALL_LEAN + row.splay + rand() * 0.35) + jitter(0.3),
           twist: twist + attempt * 0.7,
-          scale: 0.9 + rand() * 0.22,
-          tint: jitter(2),
+          scale: 0.92 + rand() * 0.22,
+          tint: jitter(1.6),
         }
       }, nextVariant())
     }
   })
 
-  // Loose middle of the pile.
+  // Dense, tumbled middle bed of interlocking nachos filling the bowl interior.
   for (let i = 0; i < middle; i++) {
     const angle = rand() * Math.PI * 2
-    const r0 = 0.12 + Math.sqrt(rand()) * 0.35
-    const y0 = TRAY.y + 0.2 + rand() * (TRAY.height - 0.35)
-    const flip = rand() < 0.5 ? 1 : -1
+    const heightFrac = (i + rand() * 0.8) / Math.max(1, middle)
+    const y0 = TRAY.y + 0.14 + heightFrac * (TRAY.height - 0.22)
+    const maxR = Math.max(0.12, trayRadiusAt(y0) - 0.22)
+    const r0 = 0.08 + Math.sqrt(rand()) * maxR
     place((attempt) => {
-      const r = Math.max(0, r0 - attempt * 0.02)
+      const r = Math.max(0, r0 - attempt * 0.018)
       return {
         x: Math.cos(angle) * r,
-        y: y0 + attempt * 0.01,
+        y: y0 + attempt * 0.008,
         z: Math.sin(angle) * r,
         yaw: rand() * Math.PI * 2,
-        lean: flip * (0.4 + rand() * 1.0),
+        // Interlocking horizontal-to-diagonal angles so the pile looks heaped, not vertical.
+        lean: -(0.55 + rand() * 0.85),
         twist: rand() * Math.PI * 2,
-        scale: 0.9 + rand() * 0.2,
-        tint: jitter(2),
+        scale: 0.92 + rand() * 0.22,
+        tint: jitter(1.6),
       }
     }, nextVariant())
   }
 
-  // Crown: chips spilling over the rim with tips up, and a bed of chips lying
-  // across the top of the mound for the sauce to sit on.
+  // Crown: generous heap of chips across the rim — outer chips splay over the
+  // bowl edge while inner chips bridge across the top and poke through the sauce.
   for (let i = 0; i < crown; i++) {
-    const outer = i < crown * 0.65
-    const angle = ((i + rand() * 0.6) / Math.max(1, crown)) * Math.PI * 2 * (outer ? 1 / 0.65 : 1) + rand()
-    const r0 = outer ? 0.58 + rand() * 0.25 : 0.18 + rand() * 0.3
-    const y0 = outer ? TRAY_RIM_Y - 0.2 + rand() * 0.08 : TRAY_RIM_Y + rand() * 0.08
+    const outer = i < crown * 0.58
+    const angle = ((i + rand() * 0.65) / Math.max(1, crown)) * Math.PI * 2 * (outer ? 1 / 0.58 : 1) + rand()
+    const r0 = outer ? 0.54 + rand() * 0.26 : 0.16 + rand() * 0.36
+    const y0 = outer ? TRAY_RIM_Y - 0.16 + rand() * 0.1 : TRAY_RIM_Y - 0.02 + rand() * 0.11
     place((attempt) => {
-      const r = Math.max(0, r0 - attempt * 0.025)
+      const r = Math.max(0, r0 - attempt * 0.024)
       return {
         x: Math.cos(angle) * r,
-        y: y0 - attempt * 0.008,
+        y: y0 - attempt * 0.007,
         z: Math.sin(angle) * r,
-        yaw: outer ? (3 * Math.PI) / 2 - angle + jitter(0.6) : Math.PI / 2 - angle + jitter(0.8),
-        // Outer: leaning out over the rim. Inner: lying 10–35° off flat, tilted outward.
-        lean: outer ? -(TRAY_WALL_LEAN * 0.7 + rand() * 0.45) : -(0.95 + rand() * 0.45),
-        twist: outer ? jitter(0.9) : rand() * Math.PI * 2,
-        scale: 0.95 + rand() * 0.2,
-        tint: jitter(2),
+        yaw: outer ? (3 * Math.PI) / 2 - angle + jitter(0.8) : rand() * Math.PI * 2,
+        lean: outer ? -(TRAY_WALL_LEAN * 0.82 + rand() * 0.55) : -(0.78 + rand() * 0.6),
+        twist: rand() * Math.PI * 2,
+        scale: 0.96 + rand() * 0.2,
+        tint: jitter(1.6),
       }
     }, nextVariant())
   }
@@ -445,8 +464,8 @@ export function chipPlacements(
 
 export const SAUCE = {
   radius: 0.74,
-  thickness: 0.15,
-  y: TRAY_RIM_Y + 0.1,
+  thickness: 0.16,
+  y: TRAY_RIM_Y + 0.09,
   /** How far the sauce edge sags down into the chips. */
   droop: 0.26,
 } as const
@@ -490,112 +509,156 @@ export interface SauceVariant {
 }
 
 export const SAUCE_VARIANTS: Record<FlavorKey, SauceVariant> = {
-  // Meaty bolognese: chunky browned mince in a glossy tomato-oil sauce.
+  // Meaty bolognese: rich simmered tomato-beef ragù with hearty browned mince, soffritto & herbs.
   bolo: {
-    color: '#6E2913',
-    roughness: 0.55,
-    clearcoat: 0.3,
-    size: 0.94,
-    spread: 0.16,
-    thickness: 0.9,
-    droop: 1,
-    profile: 0.6,
-    lumps: 0.09,
-    lumpFreq: 9,
-    colorJitter: 0.35,
-    drips: 5,
-    dripLength: [0.06, 0.14],
+    color: '#9E2412',
+    roughness: 0.46,
+    clearcoat: 0.14,
+    size: 0.96,
+    spread: 0.2,
+    thickness: 0.88,
+    droop: 0.92,
+    profile: 0.46,
+    lumps: 0.085,
+    lumpFreq: 7,
+    colorJitter: 0.28,
+    drips: 10,
+    dripLength: [0.15, 0.29],
     bits: [
       {
         shape: 'mince',
         count: 340,
-        colors: ['#5C2412', '#6E2C15', '#7F3519', '#4A1C0E', '#8E4420', '#673018'],
-        size: [0.055, 0.095],
-        embed: 0.35,
+        colors: ['#6B200F', '#822914', '#56180A', '#96341A', '#752412', '#5E1B0D'],
+        size: [0.078, 0.132],
+        embed: 0.11,
+        reach: 0.92,
+        tilt: Infinity,
+      },
+      {
+        shape: 'mince',
+        count: 110,
+        colors: ['#C42D17', '#D9411E', '#AD2210', '#E35B26'],
+        size: [0.055, 0.092],
+        embed: 0.14,
         reach: 0.9,
         tilt: Infinity,
       },
       {
-        shape: 'speck',
-        count: 26,
-        colors: ['#C2541E', '#D46A2A'],
-        size: [0.014, 0.024],
-        embed: 0.3,
+        shape: 'flake',
+        count: 48,
+        colors: ['#3B7A24', '#4E9132', '#2E631B'],
+        size: [0.032, 0.052],
+        embed: 0.03,
         reach: 0.85,
+        tilt: 0.35,
+      },
+      {
+        shape: 'speck',
+        count: 58,
+        colors: ['#F7E3AF', '#EBD08D', '#E0842B'],
+        size: [0.018, 0.032],
+        embed: 0.05,
+        reach: 0.88,
         tilt: 0.3,
       },
     ],
   },
-  // Creamy mushroom: pale cream sauce with sliced button mushrooms and pepper.
+  // Creamy mushroom: velvety ivory mushroom velouté with sliced cremini, herbs and cracked pepper.
   mush: {
-    color: '#DDCCA8',
-    roughness: 0.5,
-    clearcoat: 0.3,
-    size: 1,
-    spread: 0.14,
-    thickness: 0.85,
-    droop: 1.15,
-    profile: 0.5,
-    lumps: 0.022,
-    lumpFreq: 4,
-    colorJitter: 0.07,
-    drips: 4,
-    dripLength: [0.05, 0.11],
+    color: '#EAD9BA',
+    roughness: 0.4,
+    clearcoat: 0.18,
+    size: 0.98,
+    spread: 0.18,
+    thickness: 0.82,
+    droop: 1.0,
+    profile: 0.44,
+    lumps: 0.035,
+    lumpFreq: 5,
+    colorJitter: 0.1,
+    drips: 9,
+    dripLength: [0.13, 0.25],
     bits: [
       {
         shape: 'mushroom',
-        count: 16,
-        colors: ['#C2A47F', '#B0916B', '#CDB592', '#A88A66'],
+        count: 24,
+        colors: ['#C8AA84', '#B5966E', '#D4BC9A', '#A88964'],
         size: [0.2, 0.28],
-        embed: 0.25,
-        reach: 0.8,
-        tilt: 1.0,
+        embed: 0.12,
+        reach: 0.84,
+        tilt: 0.65,
       },
       {
-        // Chopped mushroom pieces through the cream.
         shape: 'mince',
-        count: 46,
-        colors: ['#8C7457', '#7A6248', '#9C8566', '#6E5840'],
-        size: [0.06, 0.1],
-        embed: 0.45,
-        reach: 0.85,
+        count: 85,
+        colors: ['#8C7254', '#785E42', '#9E8466', '#664F36'],
+        size: [0.065, 0.11],
+        embed: 0.12,
+        reach: 0.88,
         tilt: Infinity,
       },
       {
+        shape: 'flake',
+        count: 38,
+        colors: ['#3D7528', '#518C38', '#2F5E1E'],
+        size: [0.028, 0.044],
+        embed: 0.03,
+        reach: 0.84,
+        tilt: 0.35,
+      },
+      {
         shape: 'speck',
-        count: 70,
+        count: 85,
         colors: ['#3B3029', '#4E4036', '#2E2620'],
-        size: [0.006, 0.011],
-        embed: 0.2,
+        size: [0.01, 0.018],
+        embed: 0.04,
         reach: 0.9,
         tilt: 0.3,
       },
     ],
   },
-  // Golden cheese: smooth, glossy, runny melted cheese with a few chilli flakes.
+  // Golden cheese: warm melted cheddar-nacho cheese with chilli & jalapeño flakes.
   cheese: {
-    color: '#EE9F1C',
-    roughness: 0.3,
-    clearcoat: 0.8,
-    size: 0.95,
+    color: '#F59B14',
+    roughness: 0.28,
+    clearcoat: 0.25,
+    size: 0.96,
     spread: 0.22,
-    thickness: 0.36,
-    droop: 1.45,
-    profile: 0.3,
-    lumps: 0.035,
+    thickness: 0.46,
+    droop: 1.18,
+    profile: 0.34,
+    lumps: 0.038,
     lumpFreq: 6,
-    colorJitter: 0.22,
-    drips: 6,
-    dripLength: [0.08, 0.16],
+    colorJitter: 0.18,
+    drips: 11,
+    dripLength: [0.15, 0.3],
     bits: [
       {
+        shape: 'mince',
+        count: 52,
+        colors: ['#FFA726', '#FB8C00', '#FFB74D'],
+        size: [0.058, 0.095],
+        embed: 0.18,
+        reach: 0.85,
+        tilt: Infinity,
+      },
+      {
         shape: 'flake',
-        count: 16,
+        count: 36,
         colors: ['#B5301A', '#C8401F', '#9E2815'],
-        size: [0.03, 0.045],
-        embed: 0.3,
+        size: [0.032, 0.05],
+        embed: 0.04,
+        reach: 0.84,
+        tilt: 0.45,
+      },
+      {
+        shape: 'flake',
+        count: 24,
+        colors: ['#3E7C26', '#2E6219'],
+        size: [0.028, 0.045],
+        embed: 0.04,
         reach: 0.8,
-        tilt: 0.6,
+        tilt: 0.45,
       },
     ],
   },
@@ -611,25 +674,30 @@ export function sauceRadiusAt(theta: number, flavor: FlavorKey): number {
 
 /**
  * Sauce height at a normalised radius ρ (0 centre → 1 edge) in direction θ.
- * Top: a dollop that sags towards the edge, with lumps. Bottom: a thin
- * underside following the same sag, so the sauce drapes over the chip mound.
+ * Top: a plump dollop that drapes into wavy scalloped lobes towards the edge.
+ * Bottom: a full underside following the wavy drape with a rounded rim.
  */
 export function sauceHeight(rho: number, theta: number, flavor: FlavorKey, top = true): number {
   const v = SAUCE_VARIANTS[flavor]
   const p = clamp01(rho)
-  const dome = Math.pow(Math.max(0, 1 - p * p), v.profile)
+  const dome = Math.pow(Math.max(0, 1 - p * p * 0.85), v.profile)
   const thickness = SAUCE.thickness * v.thickness
-  const sag = SAUCE.droop * v.droop * p * p
-  if (!top) return SAUCE.y - thickness * 0.3 * dome - sag
+  // Deep scalloped lobe waves around the perimeter so the sauce drapes in organic fingers.
+  const lobeWave =
+    0.48 * Math.sin(3 * theta + 0.7) +
+    0.34 * Math.sin(5 * theta + 2.1) +
+    0.24 * Math.cos(8 * theta - 0.9)
+  const sag = SAUCE.droop * v.droop * Math.pow(p, 2.3) * (0.68 + 0.42 * lobeWave)
+  if (!top) return SAUCE.y - thickness * 0.32 * dome - sag
   const ux = p * Math.cos(theta)
   const uy = Math.sqrt(Math.max(0, 1 - p * p))
   const uz = p * Math.sin(theta)
   const f = v.lumpFreq
-  const lumps = v.lumps * fbm3(ux * f, uy * f, uz * f, 3, 13) * 2 * (1 - Math.pow(p, 6))
+  const lumps = v.lumps * fbm3(ux * f, uy * f, uz * f, 3, 13) * 2 * (1 - Math.pow(p, 5))
   return SAUCE.y + thickness * dome - sag + lumps
 }
 
-/** Sauce mesh in sauce-local space (y = 0 at SAUCE.y), with mottling vertex colours. */
+/** Sauce mesh in sauce-local space (y = 0 at SAUCE.y), with plump meniscus and rich mottling. */
 export function createSauceGeometry(flavor: FlavorKey, widthSegments = 80, heightSegments = 40): THREE.BufferGeometry {
   const v = SAUCE_VARIANTS[flavor]
   const sphere = new THREE.SphereGeometry(1, widthSegments, heightSegments)
@@ -647,13 +715,22 @@ export function createSauceGeometry(flavor: FlavorKey, widthSegments = 80, heigh
     const rho = Math.min(1, Math.hypot(x, z))
     const theta = Math.atan2(z, x)
     const radius = rho * sauceRadiusAt(theta, flavor)
-    const height = sauceHeight(rho, theta, flavor, y >= 0) - SAUCE.y
+    const topH = sauceHeight(rho, theta, flavor, true) - SAUCE.y
+    const botH = sauceHeight(rho, theta, flavor, false) - SAUCE.y
+    const midH = 0.5 * (topH + botH)
+    // Near the outer rim (|y| → 0), curve smoothly around a plump meniscus instead of pinching sharp.
+    const rimRound = smoothstep(0, 0.24, Math.abs(y))
+    const targetH = y >= 0 ? topH : botH
+    const height = lerp(midH, targetH, rimRound)
     position.setXYZ(i, Math.cos(theta) * radius, height, Math.sin(theta) * radius)
-    let shade = 1 - v.colorJitter * (0.5 + fbm3(x * 7, y * 7, z * 7, 3, 29))
-    if (y < 0) shade *= 0.8
-    colors[i * 3] = shade
-    colors[i * 3 + 1] = shade
-    colors[i * 3 + 2] = shade
+
+    const n = fbm3(x * 6.5, y * 6.5, z * 6.5, 3, 29)
+    let shade = 1 - v.colorJitter * (0.42 + n * 0.9)
+    if (y < 0) shade *= 0.84
+    // Warm culinary hue shift: crevices deepen in green/blue more than red so sauces stay rich and warm.
+    colors[i * 3] = Math.min(1.12, shade * 1.04)
+    colors[i * 3 + 1] = Math.max(0.45, shade * (1 - v.colorJitter * 0.18 * (0.5 - n)))
+    colors[i * 3 + 2] = Math.max(0.35, shade * (1 - v.colorJitter * 0.32 * (0.5 - n)))
   }
   geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
   geometry.computeVertexNormals()
@@ -716,19 +793,37 @@ export function sauceDrips(
 ): Drip[] {
   const v = SAUCE_VARIANTS[flavor]
   return Array.from({ length: v.drips }, (_, index) => {
-    const angle = ((index + seedFn() * 0.6) / v.drips) * Math.PI * 2
-    const rho = 0.86
+    const angle = ((index + seedFn() * 0.55) / v.drips) * Math.PI * 2
+    const rho = 0.94
     const radius = rho * sauceRadiusAt(angle, flavor)
     return {
       angle,
       length: lerp(v.dripLength[0], v.dripLength[1], seedFn()),
-      radius: 0.022 + seedFn() * 0.014,
-      tilt: 0.12 + seedFn() * 0.22,
+      radius: 0.038 + seedFn() * 0.022,
+      tilt: 0.06 + seedFn() * 0.14,
       x: Math.cos(angle) * radius,
-      y: sauceHeight(rho, angle, flavor, true) - 0.03,
+      y: sauceHeight(rho, angle, flavor, false) + 0.02,
       z: Math.sin(angle) * radius,
     }
   })
+}
+
+/** Plump teardrop drip anchored at y = 0 and hanging down to -length, with a glossy bulb tip. */
+export function createDripGeometry(radius: number, length: number): THREE.BufferGeometry {
+  const steps = 16
+  const points: THREE.Vector2[] = [new THREE.Vector2(0, 0)]
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps
+    // Wide flared attachment at the top, slight neck in the middle, plump droplet bulb at the bottom.
+    const flare = (1 - t) * (1 - t) * 1.45
+    const neck = Math.sin(t * Math.PI) * 0.65
+    const bulb = Math.sin(Math.pow(t, 1.5) * Math.PI) * 1.18
+    const r = t >= 0.999 ? 0 : radius * (0.42 * flare + 0.25 * neck + 0.62 * bulb)
+    points.push(new THREE.Vector2(r, -t * length))
+  }
+  const geometry = new THREE.LatheGeometry(points, 16)
+  geometry.computeVertexNormals()
+  return withWhiteColors(geometry)
 }
 
 export function withWhiteColors(geometry: THREE.BufferGeometry): THREE.BufferGeometry {
@@ -744,22 +839,30 @@ function lumpy(detail: number, amount: number, seed: number, squash = 1): THREE.
   const geometry = mergeVertices(ico)
   ico.dispose()
   const position = geometry.getAttribute('position') as THREE.BufferAttribute
+  const colors = new Float32Array(position.count * 3)
   for (let i = 0; i < position.count; i++) {
     const x = position.getX(i)
     const y = position.getY(i)
     const z = position.getZ(i)
-    const k = 1 + amount * fbm3(x * 1.8, y * 1.8, z * 1.8, 2, seed) * 2
+    const n = fbm3(x * 1.9, y * 1.9, z * 1.9, 2, seed) * 2
+    const k = 1 + amount * n
     position.setXYZ(i, x * k * 0.5, y * k * 0.5 * squash, z * k * 0.5)
+    // Subtle sear & depth shading across each chunk
+    const topLight = 0.88 + 0.18 * clamp01((y + 1) * 0.5) + 0.08 * n
+    colors[i * 3] = Math.min(1.1, topLight * 1.03)
+    colors[i * 3 + 1] = Math.min(1.05, topLight * 0.96)
+    colors[i * 3 + 2] = Math.min(1.0, topLight * 0.9)
   }
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
   geometry.computeVertexNormals()
-  return withWhiteColors(geometry)
+  return geometry
 }
 
 /** Unit-sized (≈1 across) bit meshes, all with a colour attribute for vertexColors. */
 export function createBitGeometry(shape: BitShape): THREE.BufferGeometry {
-  if (shape === 'mince') return lumpy(1, 0.45, 5)
-  if (shape === 'speck') return lumpy(0, 0.2, 9, 0.45)
-  if (shape === 'flake') return lumpy(0, 0.5, 15, 0.2)
+  if (shape === 'mince') return lumpy(2, 0.34, 5, 0.68)
+  if (shape === 'speck') return lumpy(1, 0.22, 9, 0.5)
+  if (shape === 'flake') return lumpy(1, 0.42, 15, 0.22)
 
   // Sliced button mushroom: domed cap over a short stem, seen in cross-section.
   const outline = new THREE.Shape()

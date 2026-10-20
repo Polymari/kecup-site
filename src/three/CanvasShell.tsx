@@ -47,9 +47,25 @@ export function CanvasShell({ children, className = '', fit, environment = false
   useEffect(() => {
     const container = containerRef.current
     if (!container || typeof IntersectionObserver !== 'function') return
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), {
-      threshold: 0.01,
-    })
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry) return
+        // When GSAP ScrollTrigger wraps a pinned section in `.pin-spacer`, the synchronous
+        // DOM re-parenting queues a transient record with `rootBounds: null` and a 0×0 rect.
+        if (
+          entry.rootBounds === null ||
+          (entry.boundingClientRect.width === 0 && entry.boundingClientRect.height === 0)
+        ) {
+          const rect = container.getBoundingClientRect()
+          if (rect.width > 0 && rect.height > 0) {
+            setVisible(rect.bottom > 0 && rect.top < window.innerHeight)
+          }
+          return
+        }
+        setVisible(entry.isIntersecting)
+      },
+      { threshold: 0.01 },
+    )
     observer.observe(container)
     return () => observer.disconnect()
   }, [supported, reducedMotion])
